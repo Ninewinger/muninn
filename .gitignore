@@ -1,0 +1,53 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+eggs/
+*.whl
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Environment variables
+.env
+.env.local
+
+# Database
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Models (downloaded separately)
+models/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Logs
+*.log
+logs/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Muninn data (keep schema, ignore runtime data)
+data/
