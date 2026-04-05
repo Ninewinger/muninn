@@ -8,6 +8,10 @@
 
 ---
 
+> 🚧 **Muninn está en desarrollo activo.** El diseño arquitectónico está completo (schema, API, semantic router, dreaming) pero la implementación recién comienza. Si te interesa el enfoque, dale ⭐ al repo y vuelve en unas semanas.
+
+---
+
 ## What is Muninn?
 
 Muninn is a persistent memory system for AI agents. It gives your agent:
