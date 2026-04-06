@@ -247,3 +247,218 @@ async def get_peer_memories(peer_id: str, limit: int = Query(default=20, ge=1, l
         return result
     finally:
         conn.close()
+
+
+# ══════════════════════════════════════════════════════════
+# MEMORIES
+# ══════════════════════════════════════════════════════════
+
+@app.post("/api/v1/memories", response_model=MemoryResponse, status_code=201)
+async def create_memory(body: MemoryCreate):
+    conn = get_connection()
+    try:
+        conn.execute("""
+            INSERT INTO memories (content, type, source, confidence, occurred_at, session_id, source_channel, metadata)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+        """, [
+            body.content, body.type, body.source, body.confidence,
+            body.occurred_at, body.session_id, body.source_channel,
+            json.dumps(body.metadata),
+        ])
+
+        memory_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+        # Auto-embed for semantic search
+        store_embedding(conn, "memory_embeddings", "memory_id", memory_id, body.content)
+
+        # Insert into FTS index
+        conn.execute("""
+            INSERT INTO memory_fts (rowid, content, type, source)
+            VALUES (?, ?, ?, ?)
+        """, [memory_id, body.content, body.type, body.source])
+
+        # Link to peers
+        for peer_id in body.peer_ids:
+            peer = conn.execute("SELECT id FROM peers WHERE id = ? AND is_active = 1", [peer_id]).fetchone()
+            if peer:
+                conn.execute("""
+                    INSERT OR IGNORE INTO memory_peers (memory_id, peer_id, relevance)
+                    VALUES (?, ?, 0.5)
+                """, [memory_id, peer_id])
+
+        conn.commit()
+
+        # Fetch with peers
+        memory = conn.execute("SELECT * FROM memories WHERE id = ?", [memory_id]).fetchone()
+        d = row_to_memory(memory)
+        linked = conn.execute("""
+            SELECT mp.peer_id, mp.relevance FROM memory_peers mp
+            WHERE mp.memory_id = ?
+        """, [memory_id]).fetchall()
+        d["peers"] = [dict(l) for l in linked]
+        return d
+    finally:
+        conn.close()
+
+
+@app.get("/api/v1/memories", response_model=list[MemoryResponse])
+async def list_memories(
+    peer_id: Optional[str] = Query(None),
+    type: Optional[str] = Query(None),
+    limit: int = Query(default=20, ge=1, le=100),
+):
+    conn = get_connection()
+    try:
+        if peer_id:
+            rows = conn.execute("""
+                SELECT m.* FROM memories m
+                JOIN memory_peers mp ON m.id = mp.memory_id
+                WHERE mp.peer_id = ? AND m.is_active = 1
+                ORDER BY m.created_at DESC LIMIT ?
+            """, [peer_id, limit]).fetchall()
+        else:
+            query = "SELECT * FROM memories WHERE is_active = 1"
+            params = []
+            if type:
+                query += " AND type = ?"
+                params.append(type)
+            query += " ORDER BY created_at DESC LIMIT ?"
+            params.append(limit)
+            rows = conn.execute(query, params).fetchall()
+
+        result = []
+        for r in rows:
+            d = row_to_memory(r)
+            linked = conn.execute("""
+                SELECT mp.peer_id, mp.relevance FROM memory_peers mp
+                WHERE mp.memory_id = ?
+            """, [r["id"]]).fetchall()
+            d["peers"] = [dict(l) for l in linked]
+            result.append(d)
+        return result
+    finally:
+        conn.close()
+
+
+@app.get("/api/v1/memories/{memory_id}", response_model=MemoryResponse)
+async def get_memory(memory_id: int):
+    conn = get_connection()
+    try:
+        memory = conn.execute("SELECT * FROM memories WHERE id = ?", [memory_id]).fetchone()
+        if not memory:
+            raise HTTPException(404, f"Memory {memory_id} not found")
+        d = row_to_memory(memory)
+        linked = conn.execute("""
+            SELECT mp.peer_id, mp.relevance FROM memory_peers mp
+            WHERE mp.memory_id = ?
+        """, [memory_id]).fetchall()
+        d["peers"] = [dict(l) for l in linked]
+        return d
+    finally:
+        conn.close()
+
+
+@app.put("/api/v1/memories/{memory_id}", response_model=MemoryResponse)
+async def update_memory(memory_id: int, body: MemoryUpdate):
+    conn = get_connection()
+    try:
+        memory = conn.execute("SELECT * FROM memories WHERE id = ?", [memory_id]).fetchone()
+        if not memory:
+            raise HTTPException(404, f"Memory {memory_id} not found")
+
+        updates = []
+        params = []
+        if body.content is not None:
+            updates.append("content = ?")
+            params.append(body.content)
+        if body.confidence is not None:
+            updates.append("confidence = ?")
+            params.append(body.confidence)
+        if body.metadata is not None:
+            updates.append("metadata = ?")
+            params.append(json.dumps(body.metadata))
+
+        if updates:
+            updates.append("updated_at = datetime('now')")
+            params.append(memory_id)
+            conn.execute(f"UPDATE memories SET {', '.join(updates)} WHERE id = ?", params)
+
+            # Re-embed and re-index FTS if content changed
+            if body.content is not None:
+                store_embedding(conn, "memory_embeddings", "memory_id", memory_id, body.content)
+                conn.execute("DELETE FROM memory_fts WHERE rowid = ?", [memory_id])
+                conn.execute("""
+                    INSERT INTO memory_fts (rowid, content, type, source)
+                    VALUES (?, ?, ?, ?)
+                """, [memory_id, body.content, memory["type"], memory["source"]])
+
+        conn.commit()
+
+        updated = conn.execute("SELECT * FROM memories WHERE id = ?", [memory_id]).fetchone()
+        d = row_to_memory(updated)
+        linked = conn.execute("""
+            SELECT mp.peer_id, mp.relevance FROM memory_peers mp
+            WHERE mp.memory_id = ?
+        """, [memory_id]).fetchall()
+        d["peers"] = [dict(l) for l in linked]
+        return d
+    finally:
+        conn.close()
+
+
+@app.delete("/api/v1/memories/{memory_id}", response_model=MessageResponse)
+async def delete_memory(memory_id: int):
+    conn = get_connection()
+    try:
+        memory = conn.execute("SELECT id FROM memories WHERE id = ?", [memory_id]).fetchone()
+        if not memory:
+            raise HTTPException(404, f"Memory {memory_id} not found")
+
+        conn.execute("UPDATE memories SET is_active = 0, updated_at = datetime('now') WHERE id = ?", [memory_id])
+        conn.commit()
+        return MessageResponse(message=f"Memory {memory_id} soft-deleted")
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════
+# CONNECTIONS
+# ══════════════════════════════════════════════════════════
+
+@app.post("/api/v1/connections", response_model=ConnectionResponse, status_code=201)
+async def create_connection(body: ConnectionCreate):
+    conn = get_connection()
+    try:
+        # Verify both peers exist
+        for pid in [body.from_peer_id, body.to_peer_id]:
+            if not conn.execute("SELECT id FROM peers WHERE id = ?", [pid]).fetchone():
+                raise HTTPException(404, f"Peer '{pid}' not found")
+
+        conn.execute("""
+            INSERT INTO connections (from_peer_id, to_peer_id, relation_type, strength, description)
+            VALUES (?, ?, ?, ?, ?)
+        """, [body.from_peer_id, body.to_peer_id, body.relation_type, body.strength, body.description])
+
+        conn.commit()
+        row = conn.execute("SELECT * FROM connections WHERE from_peer_id=? AND to_peer_id=? AND relation_type=?",
+                          [body.from_peer_id, body.to_peer_id, body.relation_type]).fetchone()
+        return dict(row)
+    finally:
+        conn.close()
+
+
+@app.get("/api/v1/connections", response_model=list[ConnectionResponse])
+async def list_connections(peer_id: Optional[str] = Query(None)):
+    conn = get_connection()
+    try:
+        if peer_id:
+            rows = conn.execute("""
+                SELECT * FROM connections
+                WHERE from_peer_id = ? OR to_peer_id = ?
+                ORDER BY created_at DESC
+            """, [peer_id, peer_id]).fetchall()
+        else:
+            rows = conn.execute("SELECT * FROM connections ORDER BY created_at DESC").fetchall()
+        return [dict(r) for r in rows]
+    finally:
+        conn.close()
