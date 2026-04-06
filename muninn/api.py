@@ -1,6 +1,7 @@
 """Muninn API — FastAPI application."""
 
 import json
+import os
 import struct
 from typing import Optional
 
@@ -460,5 +461,147 @@ async def list_connections(peer_id: Optional[str] = Query(None)):
         else:
             rows = conn.execute("SELECT * FROM connections ORDER BY created_at DESC").fetchall()
         return [dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════
+# EVENTS
+# ══════════════════════════════════════════════════════════
+
+@app.post("/api/v1/events", response_model=EventResponse)
+async def create_event(body: EventCreate):
+    conn = get_connection()
+    try:
+        # Create or find session
+        if body.session_id:
+            session = conn.execute("SELECT id FROM sessions WHERE id = ?", [body.session_id]).fetchone()
+            if not session:
+                conn.execute("""
+                    INSERT INTO sessions (id, channel) VALUES (?, ?)
+                """, [body.session_id, body.channel or "unknown"])
+
+        # Store event
+        conn.execute("""
+            INSERT INTO events (session_id, type, content, channel, metadata)
+            VALUES (?, ?, ?, ?, ?)
+        """, [body.session_id, body.type, body.content, body.channel, json.dumps(body.metadata)])
+
+        event_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
+
+        # Run semantic router to find activated peers
+        from .router import route
+        activated = route(body.content, db_path=os.environ.get("DB_PATH", "./muninn.db"))
+
+        # Record activations
+        for a in activated:
+            conn.execute("""
+                INSERT INTO activations (event_id, peer_id, similarity)
+                VALUES (?, ?, ?)
+            """, [event_id, a["peer_id"], a["similarity"]])
+
+            # Increment activation count on peer
+            conn.execute("""
+                UPDATE peers
+                SET activation_count = activation_count + 1,
+                    last_activated_at = datetime('now')
+                WHERE id = ?
+            """, [a["peer_id"]])
+
+        conn.commit()
+
+        return EventResponse(
+            event_id=event_id,
+            activations=activated,
+        )
+    finally:
+        conn.close()
+
+
+# ══════════════════════════════════════════════════════════
+# SEARCH
+# ══════════════════════════════════════════════════════════
+
+@app.post("/api/v1/search", response_model=list[SearchResult])
+async def search(body: SearchRequest):
+    conn = get_connection()
+    try:
+        results = []
+
+        if body.method in ("semantic", "hybrid"):
+            # Semantic search via sqlite-vec
+            vector = embed(body.query)
+            import struct
+            query_bytes = struct.pack(f"{len(vector)}f", *vector)
+
+            rows = conn.execute("""
+                SELECT me.memory_id, me.distance
+                FROM memory_embeddings me
+                WHERE me.embedding MATCH ? AND k = ?
+                ORDER BY me.distance
+            """, [query_bytes, body.limit]).fetchall()
+
+            for r in rows:
+                memory = conn.execute(
+                    "SELECT * FROM memories WHERE id = ? AND is_active = 1", [r["memory_id"]]
+                ).fetchone()
+                if not memory:
+                    continue
+
+                # Get linked peers
+                peers = conn.execute("""
+                    SELECT peer_id FROM memory_peers WHERE memory_id = ?
+                """, [memory["id"]]).fetchall()
+
+                results.append(SearchResult(
+                    memory_id=memory["id"],
+                    content=memory["content"],
+                    type=memory["type"],
+                    score=round(1.0 - r["distance"], 4),
+                    peers=[p["peer_id"] for p in peers],
+                ))
+
+        if body.method in ("fts", "hybrid"):
+            # Full-text search via FTS5
+            fts_results = conn.execute("""
+                SELECT rowid, rank
+                FROM memory_fts
+                WHERE memory_fts MATCH ?
+                ORDER BY rank
+                LIMIT ?
+            """, [body.query, body.limit]).fetchall()
+
+            existing_ids = {r.memory_id for r in results}
+
+            for fr in fts_results:
+                if fr["rowid"] in existing_ids:
+                    # Update score for hybrid (combine both)
+                    for r in results:
+                        if r.memory_id == fr["rowid"]:
+                            # Boost score if found in both
+                            r.score = min(1.0, r.score + 0.1)
+                    continue
+
+                memory = conn.execute(
+                    "SELECT * FROM memories WHERE id = ? AND is_active = 1", [fr["rowid"]]
+                ).fetchone()
+                if not memory:
+                    continue
+
+                peers = conn.execute("""
+                    SELECT peer_id FROM memory_peers WHERE memory_id = ?
+                """, [memory["id"]]).fetchall()
+
+                results.append(SearchResult(
+                    memory_id=memory["id"],
+                    content=memory["content"],
+                    type=memory["type"],
+                    score=round(max(0, 1.0 - abs(fr["rank"])), 4),
+                    peers=[p["peer_id"] for p in peers],
+                ))
+
+        # Sort by score descending
+        results.sort(key=lambda x: x.score, reverse=True)
+        return results[:body.limit]
     finally:
         conn.close()

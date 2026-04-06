@@ -7,18 +7,24 @@ from typing import List
 DEFAULT_MODEL = "paraphrase-multilingual-MiniLM-L12-v2"
 DEFAULT_DIMENSIONS = 384
 
+# Singleton model cache
+_model = None
+
 
 def get_embedding_model():
-    """Get the sentence-transformers model."""
-    try:
-        from sentence_transformers import SentenceTransformer
-        model_name = os.getenv("EMBEDDING_MODEL", DEFAULT_MODEL)
-        return SentenceTransformer(model_name)
-    except ImportError:
-        raise ImportError(
-            "sentence-transformers not installed. "
-            "Install with: pip install sentence-transformers"
-        )
+    """Get the sentence-transformers model (cached)."""
+    global _model
+    if _model is None:
+        try:
+            from sentence_transformers import SentenceTransformer
+            model_name = os.getenv("EMBEDDING_MODEL", DEFAULT_MODEL)
+            _model = SentenceTransformer(model_name)
+        except ImportError:
+            raise ImportError(
+                "sentence-transformers not installed. "
+                "Install with: pip install sentence-transformers"
+            )
+    return _model
 
 
 def embed(text: str, model=None) -> List[float]:
