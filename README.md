@@ -324,9 +324,9 @@ This project is licensed under the MIT License — see [LICENSE](LICENSE) for de
 
 If Muninn is useful to you, consider supporting its development:
 
-[![Buy Me a Coffee](https://img.shields.io/badge/Buy_Me_a_Coffee-support-yellow?logo=buy-me-a-coffee&logoColor=white)](https://buymeacoffee.com/ninewinger)
+[![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ninewinger)
 
-Or visit: https://buymeacoffee.com/ninewinger
+Or visit: https://ko-fi.com/ninewinger
 
 ---
 
