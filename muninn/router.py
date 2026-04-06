@@ -1,5 +1,6 @@
 """Semantic router — activates peers based on event embeddings."""
 
+import os
 import sqlite3
 from typing import List, Dict, Optional
 
@@ -22,7 +23,7 @@ def route(
 
     conn = get_connection(db_path)
 
-    # Get all active peers with their embeddings
+    # Get all active peers
     peers = conn.execute("""
         SELECT p.id, p.name, p.type, p.representation,
                p.activation_threshold, p.confidence, p.tags
@@ -30,41 +31,43 @@ def route(
         WHERE p.is_active = 1
     """).fetchall()
 
-    # Get peer embeddings from sqlite-vec
+    if not peers:
+        conn.close()
+        return []
+
+    peer_ids = [p["id"] for p in peers]
+    thresholds = {p["id"]: p["activation_threshold"] for p in peers}
+    peer_data = {p["id"]: dict(p) for p in peers}
+
+    # Use sqlite-vec knn search
+    import struct
+    dims = 384
+    query_bytes = struct.pack(f"{dims}f", *text_embedding)
+
+    results = conn.execute("""
+        SELECT peer_id, distance
+        FROM peer_embeddings
+        WHERE embedding MATCH ? AND k = ?
+    """, [query_bytes, max(top_k * 2, len(peer_ids))]).fetchall()
+
     activated = []
+    for row in results:
+        peer_id = row["peer_id"]
+        # sqlite-vec distance = cosine distance (1 - similarity for normalized vectors)
+        similarity = 1.0 - row["distance"]
+        threshold = thresholds.get(peer_id, 0.65)
 
-    for peer in peers:
-        peer_id = peer["id"]
-        try:
-            row = conn.execute(
-                "SELECT embedding FROM peer_embeddings WHERE peer_id = ?",
-                (peer_id,)
-            ).fetchone()
-
-            if row is None:
-                continue
-
-            peer_embedding = row["embedding"]
-            # sqlite-vec returns raw bytes, need to convert
-            import struct
-            dims = int(os.getenv("EMBEDDING_DIMENSIONS", "384"))
-            peer_vec = list(struct.unpack(f"{dims}f", peer_embedding))
-
-            similarity = cosine_similarity(text_embedding, peer_vec)
-            threshold = peer["activation_threshold"]
-
-            if similarity >= threshold and similarity >= min_threshold:
-                activated.append({
-                    "peer_id": peer_id,
-                    "name": peer["name"],
-                    "type": peer["type"],
-                    "similarity": round(similarity, 4),
-                    "threshold": threshold,
-                    "representation": peer["representation"],
-                    "confidence": peer["confidence"],
-                })
-        except Exception:
-            continue
+        if similarity >= threshold and similarity >= min_threshold:
+            p = peer_data[peer_id]
+            activated.append({
+                "peer_id": peer_id,
+                "name": p["name"],
+                "type": p["type"],
+                "similarity": round(similarity, 4),
+                "threshold": threshold,
+                "representation": p["representation"],
+                "confidence": p["confidence"],
+            })
 
     conn.close()
 
