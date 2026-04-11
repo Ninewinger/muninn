@@ -1,11 +1,11 @@
-"""Database management for Muninn."""
+"""Database management for Muninn v0.2 — Disco Elysium architecture."""
 
 import os
 import sqlite3
 import sqlite_vec
 from pathlib import Path
 
-SCHEMA_PATH = Path(__file__).parent / "schema.sql"
+SCHEMA_PATH = Path(__file__).parent / "schema_v2.sql"
 
 
 def get_db_path() -> str:
@@ -32,16 +32,43 @@ def get_connection(db_path: str | None = None) -> sqlite3.Connection:
     return conn
 
 
-def init_db(db_path: str | None = None) -> sqlite3.Connection:
-    """Initialize database with schema."""
+def get_embedding_dims(conn: sqlite3.Connection) -> int:
+    """Get configured embedding dimensions from DB, or default."""
+    try:
+        row = conn.execute(
+            "SELECT value FROM embedding_config WHERE key = 'dimensions'"
+        ).fetchone()
+        if row:
+            return int(row["value"])
+    except Exception:
+        pass
+    return 1024  # default for Qwen3-Embedding
+
+
+def init_db(db_path: str | None = None, dimensions: int = None) -> sqlite3.Connection:
+    """Initialize database with v0.2 schema (Disco Elysium).
+
+    Args:
+        db_path: Path to the database file.
+        dimensions: Embedding vector dimensions. If None, uses EMBEDDING_DIMS env var
+                   or defaults to 1024 (Qwen3-Embedding).
+    """
+    if dimensions is None:
+        dimensions = int(os.getenv("EMBEDDING_DIMS", "1024"))
+
     conn = get_connection(db_path)
 
     schema = SCHEMA_PATH.read_text(encoding="utf-8")
-    # Remove the comment lines about .load (those are sqlite CLI commands, not SQL)
+    # Remove sqlite CLI comments (.load directives)
     clean_schema = "\n".join(
         line for line in schema.splitlines()
         if not line.strip().startswith("-- .load")
     )
+
+    # Replace dimension placeholders in schema
+    # Supports FLOAT[1024] → FLOAT[384] etc.
+    import re
+    clean_schema = re.sub(r'FLOAT\[\d+\]', f'FLOAT[{dimensions}]', clean_schema)
 
     try:
         conn.executescript(clean_schema)
@@ -61,12 +88,16 @@ def init_db(db_path: str | None = None) -> sqlite3.Connection:
         else:
             raise
 
+    # Update dimensions in config if different from schema default
+    conn.execute("UPDATE embedding_config SET value = ? WHERE key = 'dimensions'", [str(dimensions)])
     conn.commit()
     return conn
 
 
 if __name__ == "__main__":
-    print("Initializing Muninn database...")
+    print("Initializing Muninn v0.2 database...")
     conn = init_db()
     print(f"Database created at: {get_db_path()}")
+    dims = get_embedding_dims(conn)
+    print(f"Embedding dimensions: {dims}")
     conn.close()
