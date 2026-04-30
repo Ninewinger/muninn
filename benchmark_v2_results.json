@@ -1,0 +1,3067 @@
+{
+  "A: Baseline (facet max-sim)": {
+    "metrics": {
+      "top1": 0.593,
+      "top3": 0.741,
+      "mrr": 0.7,
+      "gap": 0.0073
+    },
+    "per_query": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.4158
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3189
+          ],
+          [
+            "sombra_rechazo",
+            0.2998
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.4137
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3408
+          ],
+          [
+            "peer_usuario",
+            0.2481
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.5656
+          ],
+          [
+            "sombra_fortaleza",
+            0.5052
+          ],
+          [
+            "sombra_rechazo",
+            0.4735
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.4365
+          ],
+          [
+            "sombra_rechazo",
+            0.4197
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3231
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.674
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.2326
+          ],
+          [
+            "peer_identidad",
+            0.2062
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.6796
+          ],
+          [
+            "sombra_fortaleza",
+            0.3773
+          ],
+          [
+            "casual_social",
+            0.3091
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.6058
+          ],
+          [
+            "sombra_fortaleza",
+            0.5752
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.5496
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.6604
+          ],
+          [
+            "sombra_rechazo",
+            0.4667
+          ],
+          [
+            "proyecto_juego",
+            0.3653
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.3845
+          ],
+          [
+            "sombra_fortaleza",
+            0.3129
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.2602
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3867
+          ],
+          [
+            "gym_rutina",
+            0.2319
+          ],
+          [
+            "sombra_muerte",
+            0.2163
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.4849
+          ],
+          [
+            "sombra_rechazo",
+            0.3288
+          ],
+          [
+            "peer_usuario",
+            0.1924
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "expected": [
+          "casual_social",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.3734
+          ],
+          [
+            "sombra_rechazo",
+            0.3098
+          ],
+          [
+            "nanobot_sistema",
+            0.2837
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "programacion",
+        "top3": [
+          [
+            "programacion",
+            0.4759
+          ],
+          [
+            "sombra_fortaleza",
+            0.3424
+          ],
+          [
+            "proyecto_juego",
+            0.3377
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "programacion",
+        "top3": [
+          [
+            "programacion",
+            0.3759
+          ],
+          [
+            "peer_herramientas",
+            0.3643
+          ],
+          [
+            "peer_identidad",
+            0.3639
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.5
+          ],
+          [
+            "peer_usuario",
+            0.4038
+          ],
+          [
+            "peer_identidad",
+            0.3194
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.4417
+          ],
+          [
+            "peer_identidad",
+            0.3652
+          ],
+          [
+            "nanobot_sistema",
+            0.3289
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3556
+          ],
+          [
+            "proyecto_juego",
+            0.2918
+          ],
+          [
+            "valle_alto",
+            0.2786
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.3081
+          ],
+          [
+            "peer_usuario",
+            0.2778
+          ],
+          [
+            "peer_identidad",
+            0.2684
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.493
+          ],
+          [
+            "sombra_fortaleza",
+            0.3838
+          ],
+          [
+            "casual_social",
+            0.3413
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.4994
+          ],
+          [
+            "nanobot_sistema",
+            0.4798
+          ],
+          [
+            "peer_identidad",
+            0.325
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          [
+            "nanobot_sistema",
+            0.6416
+          ],
+          [
+            "peer_operativo",
+            0.4951
+          ],
+          [
+            "peer_skills",
+            0.4225
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.3703
+          ],
+          [
+            "casual_social",
+            0.3411
+          ],
+          [
+            "gym_rutina",
+            0.3301
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5248
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.403
+          ],
+          [
+            "peer_usuario",
+            0.3774
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.613
+          ],
+          [
+            "peer_usuario",
+            0.5663
+          ],
+          [
+            "nanobot_sistema",
+            0.5385
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "expected": [
+          "casual_social",
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.4023
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3736
+          ],
+          [
+            "sombra_fortaleza",
+            0.3241
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.4754
+          ],
+          [
+            "peer_skills",
+            0.3536
+          ],
+          [
+            "nanobot_sistema",
+            0.3456
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "expected": [
+          "valle_alto",
+          "programacion",
+          "sombra_fortaleza"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3888
+          ],
+          [
+            "sombra_rechazo",
+            0.3121
+          ],
+          [
+            "proyecto_juego",
+            0.3074
+          ]
+        ],
+        "category": "hard"
+      }
+    ]
+  },
+  "B: Query instruction": {
+    "metrics": {
+      "top1": 0.259,
+      "top3": 0.519,
+      "mrr": 0.456,
+      "gap": -0.0647
+    },
+    "per_query": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.5406
+          ],
+          [
+            "sombra_fortaleza",
+            0.5132
+          ],
+          [
+            "sombra_muerte",
+            0.5072
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.4863
+          ],
+          [
+            "sombra_rechazo",
+            0.4438
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.4401
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5981
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.5723
+          ],
+          [
+            "sombra_muerte",
+            0.4723
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.6088
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.4809
+          ],
+          [
+            "proyecto_juego",
+            0.4455
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.5233
+          ],
+          [
+            "sombra_muerte",
+            0.4856
+          ],
+          [
+            "sombra_fortaleza",
+            0.4461
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.5487
+          ],
+          [
+            "sombra_fortaleza",
+            0.498
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.4817
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.6386
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.5616
+          ],
+          [
+            "sombra_rechazo",
+            0.5411
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.6986
+          ],
+          [
+            "proyecto_juego",
+            0.524
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.5129
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5148
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.4568
+          ],
+          [
+            "proyecto_juego",
+            0.43
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.458
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3991
+          ],
+          [
+            "sombra_rechazo",
+            0.371
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.4429
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3796
+          ],
+          [
+            "sombra_fortaleza",
+            0.3573
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "expected": [
+          "casual_social",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.4505
+          ],
+          [
+            "proyecto_juego",
+            0.4283
+          ],
+          [
+            "sombra_fortaleza",
+            0.3916
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          [
+            "peer_identidad",
+            0.5031
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.4282
+          ],
+          [
+            "proyecto_juego",
+            0.42
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          [
+            "peer_identidad",
+            0.4652
+          ],
+          [
+            "nanobot_sistema",
+            0.375
+          ],
+          [
+            "peer_usuario",
+            0.3686
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.5151
+          ],
+          [
+            "peer_usuario",
+            0.4712
+          ],
+          [
+            "sombra_fortaleza",
+            0.4442
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.5562
+          ],
+          [
+            "peer_usuario",
+            0.4344
+          ],
+          [
+            "peer_identidad",
+            0.4162
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.384
+          ],
+          [
+            "sombra_fortaleza",
+            0.3616
+          ],
+          [
+            "casual_social",
+            0.3545
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.4581
+          ],
+          [
+            "peer_identidad",
+            0.4199
+          ],
+          [
+            "nanobot_sistema",
+            0.3391
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5444
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.483
+          ],
+          [
+            "proyecto_juego",
+            0.4637
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          [
+            "peer_identidad",
+            0.4597
+          ],
+          [
+            "nanobot_sistema",
+            0.4503
+          ],
+          [
+            "sombra_fortaleza",
+            0.431
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          [
+            "nanobot_sistema",
+            0.5973
+          ],
+          [
+            "peer_operativo",
+            0.4963
+          ],
+          [
+            "peer_skills",
+            0.4496
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.5034
+          ],
+          [
+            "sombra_fortaleza",
+            0.4654
+          ],
+          [
+            "peer_identidad",
+            0.4523
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.6093
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.5284
+          ],
+          [
+            "casual_social",
+            0.4527
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.6311
+          ],
+          [
+            "peer_usuario",
+            0.6105
+          ],
+          [
+            "nanobot_sistema",
+            0.5301
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "expected": [
+          "casual_social",
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.5852
+          ],
+          [
+            "sombra_muerte",
+            0.5137
+          ],
+          [
+            "sombra_fortaleza",
+            0.5006
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.5426
+          ],
+          [
+            "peer_identidad",
+            0.4483
+          ],
+          [
+            "peer_skills",
+            0.4081
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "expected": [
+          "valle_alto",
+          "programacion",
+          "sombra_fortaleza"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          [
+            "peer_identidad",
+            0.4228
+          ],
+          [
+            "casual_social",
+            0.396
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3865
+          ]
+        ],
+        "category": "hard"
+      }
+    ]
+  },
+  "C: Composite peer": {
+    "metrics": {
+      "top1": 0.593,
+      "top3": 0.889,
+      "mrr": 0.735,
+      "gap": 0.0323
+    },
+    "per_query": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.2392
+          ],
+          [
+            "sombra_muerte",
+            0.2137
+          ],
+          [
+            "sombra_fortaleza",
+            0.152
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.3185
+          ],
+          [
+            "programacion",
+            0.2407
+          ],
+          [
+            "peer_operativo",
+            0.1658
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.2802
+          ],
+          [
+            "sombra_fortaleza",
+            0.2723
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.2502
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.3004
+          ],
+          [
+            "peer_skills",
+            0.2934
+          ],
+          [
+            "sombra_fortaleza",
+            0.2203
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.2278
+          ],
+          [
+            "peer_operativo",
+            0.1354
+          ],
+          [
+            "sombra_rechazo",
+            0.0982
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.4473
+          ],
+          [
+            "casual_social",
+            0.1932
+          ],
+          [
+            "sombra_muerte",
+            0.1451
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.4623
+          ],
+          [
+            "sombra_fortaleza",
+            0.4007
+          ],
+          [
+            "sombra_rechazo",
+            0.2637
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5689
+          ],
+          [
+            "sombra_rechazo",
+            0.3429
+          ],
+          [
+            "peer_skills",
+            0.3291
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.222
+          ],
+          [
+            "gym_rutina",
+            0.1784
+          ],
+          [
+            "programacion",
+            0.1122
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "peer_operativo",
+        "top3": [
+          [
+            "peer_operativo",
+            0.1522
+          ],
+          [
+            "casual_social",
+            0.1491
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.0983
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3181
+          ],
+          [
+            "peer_usuario",
+            0.2128
+          ],
+          [
+            "valle_alto",
+            0.0911
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "expected": [
+          "casual_social",
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.2744
+          ],
+          [
+            "nanobot_sistema",
+            0.1812
+          ],
+          [
+            "sombra_fortaleza",
+            0.1747
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "programacion",
+        "top3": [
+          [
+            "programacion",
+            0.3484
+          ],
+          [
+            "peer_herramientas",
+            0.241
+          ],
+          [
+            "sombra_rechazo",
+            0.2139
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_herramientas",
+        "top3": [
+          [
+            "peer_herramientas",
+            0.4025
+          ],
+          [
+            "programacion",
+            0.2845
+          ],
+          [
+            "gym_rutina",
+            0.28
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.3988
+          ],
+          [
+            "peer_skills",
+            0.3465
+          ],
+          [
+            "peer_identidad",
+            0.3446
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.4515
+          ],
+          [
+            "peer_identidad",
+            0.3647
+          ],
+          [
+            "proyecto_juego",
+            0.3597
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "valle_alto",
+        "top3": [
+          [
+            "valle_alto",
+            0.3945
+          ],
+          [
+            "peer_usuario",
+            0.2957
+          ],
+          [
+            "casual_social",
+            0.1908
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.1969
+          ],
+          [
+            "peer_skills",
+            0.1314
+          ],
+          [
+            "peer_operativo",
+            0.1086
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.3219
+          ],
+          [
+            "peer_identidad",
+            0.3028
+          ],
+          [
+            "sombra_fortaleza",
+            0.2087
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.4279
+          ],
+          [
+            "programacion",
+            0.4049
+          ],
+          [
+            "peer_herramientas",
+            0.3525
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "peer_operativo",
+        "top3": [
+          [
+            "peer_operativo",
+            0.4644
+          ],
+          [
+            "peer_usuario",
+            0.2849
+          ],
+          [
+            "peer_skills",
+            0.2643
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3388
+          ],
+          [
+            "sombra_rechazo",
+            0.2685
+          ],
+          [
+            "peer_skills",
+            0.2548
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.3209
+          ],
+          [
+            "sombra_fortaleza",
+            0.2774
+          ],
+          [
+            "peer_herramientas",
+            0.2089
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.4811
+          ],
+          [
+            "peer_skills",
+            0.3486
+          ],
+          [
+            "nanobot_sistema",
+            0.3441
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "expected": [
+          "casual_social",
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.2155
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.1652
+          ],
+          [
+            "sombra_fortaleza",
+            0.1217
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.4331
+          ],
+          [
+            "programacion",
+            0.33
+          ],
+          [
+            "peer_skills",
+            0.3162
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "expected": [
+          "valle_alto",
+          "programacion",
+          "sombra_fortaleza"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.2254
+          ],
+          [
+            "peer_identidad",
+            0.185
+          ],
+          [
+            "valle_alto",
+            0.1413
+          ]
+        ],
+        "category": "hard"
+      }
+    ]
+  },
+  "D: Instruction + Composite": {
+    "metrics": {
+      "top1": 0.556,
+      "top3": 0.778,
+      "mrr": 0.693,
+      "gap": 0.0158
+    },
+    "per_query": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.3946
+          ],
+          [
+            "sombra_fortaleza",
+            0.3668
+          ],
+          [
+            "sombra_muerte",
+            0.3548
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.4183
+          ],
+          [
+            "casual_social",
+            0.3324
+          ],
+          [
+            "sombra_fortaleza",
+            0.3303
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.428
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3823
+          ],
+          [
+            "sombra_muerte",
+            0.3799
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.4312
+          ],
+          [
+            "peer_skills",
+            0.3952
+          ],
+          [
+            "sombra_rechazo",
+            0.3869
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.3774
+          ],
+          [
+            "sombra_fortaleza",
+            0.331
+          ],
+          [
+            "sombra_rechazo",
+            0.3178
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.5129
+          ],
+          [
+            "sombra_fortaleza",
+            0.3743
+          ],
+          [
+            "casual_social",
+            0.3692
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.4993
+          ],
+          [
+            "sombra_fortaleza",
+            0.4938
+          ],
+          [
+            "sombra_rechazo",
+            0.3264
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5997
+          ],
+          [
+            "sombra_rechazo",
+            0.3929
+          ],
+          [
+            "proyecto_juego",
+            0.3927
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.444
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.306
+          ],
+          [
+            "gym_rutina",
+            0.3054
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.3201
+          ],
+          [
+            "peer_operativo",
+            0.3086
+          ],
+          [
+            "sombra_fortaleza",
+            0.3021
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.4166
+          ],
+          [
+            "sombra_fortaleza",
+            0.311
+          ],
+          [
+            "proyecto_juego",
+            0.2806
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "expected": [
+          "casual_social",
+          "gym_rutina"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.3631
+          ],
+          [
+            "gym_rutina",
+            0.3594
+          ],
+          [
+            "proyecto_juego",
+            0.344
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          [
+            "peer_identidad",
+            0.3702
+          ],
+          [
+            "proyecto_juego",
+            0.3515
+          ],
+          [
+            "sombra_fortaleza",
+            0.3448
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.365
+          ],
+          [
+            "peer_herramientas",
+            0.3489
+          ],
+          [
+            "gym_rutina",
+            0.3289
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.5335
+          ],
+          [
+            "peer_identidad",
+            0.4327
+          ],
+          [
+            "peer_skills",
+            0.4159
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.5654
+          ],
+          [
+            "peer_skills",
+            0.5282
+          ],
+          [
+            "peer_identidad",
+            0.4764
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "valle_alto",
+        "top3": [
+          [
+            "valle_alto",
+            0.4491
+          ],
+          [
+            "casual_social",
+            0.3472
+          ],
+          [
+            "sombra_fortaleza",
+            0.2846
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.3011
+          ],
+          [
+            "proyecto_juego",
+            0.2507
+          ],
+          [
+            "peer_identidad",
+            0.2489
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.3761
+          ],
+          [
+            "peer_identidad",
+            0.3713
+          ],
+          [
+            "sombra_rechazo",
+            0.3692
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.4612
+          ],
+          [
+            "sombra_fortaleza",
+            0.38
+          ],
+          [
+            "peer_identidad",
+            0.3773
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "peer_operativo",
+        "top3": [
+          [
+            "peer_operativo",
+            0.423
+          ],
+          [
+            "casual_social",
+            0.3296
+          ],
+          [
+            "peer_skills",
+            0.3133
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.422
+          ],
+          [
+            "sombra_fortaleza",
+            0.3741
+          ],
+          [
+            "sombra_rechazo",
+            0.3508
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.4645
+          ],
+          [
+            "sombra_rechazo",
+            0.4147
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3596
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.5391
+          ],
+          [
+            "peer_skills",
+            0.396
+          ],
+          [
+            "proyecto_juego",
+            0.3641
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "expected": [
+          "casual_social",
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.3875
+          ],
+          [
+            "sombra_muerte",
+            0.3756
+          ],
+          [
+            "sombra_fortaleza",
+            0.3603
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.4678
+          ],
+          [
+            "peer_skills",
+            0.3955
+          ],
+          [
+            "programacion",
+            0.3602
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "expected": [
+          "valle_alto",
+          "programacion",
+          "sombra_fortaleza"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3481
+          ],
+          [
+            "peer_identidad",
+            0.3352
+          ],
+          [
+            "proyecto_juego",
+            0.3306
+          ]
+        ],
+        "category": "hard"
+      }
+    ]
+  },
+  "E: Facet avg-sim": {
+    "metrics": {
+      "top1": 0.556,
+      "top3": 0.704,
+      "mrr": 0.673,
+      "gap": 0.0134
+    },
+    "per_query": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.3078
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.25
+          ],
+          [
+            "sombra_rechazo",
+            0.2498
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.2599
+          ],
+          [
+            "nanobot_sistema",
+            0.1552
+          ],
+          [
+            "sombra_fortaleza",
+            0.1273
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.3856
+          ],
+          [
+            "sombra_fortaleza",
+            0.3807
+          ],
+          [
+            "sombra_rechazo",
+            0.3161
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.3316
+          ],
+          [
+            "sombra_rechazo",
+            0.2863
+          ],
+          [
+            "peer_identidad",
+            0.2276
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.3361
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.1781
+          ],
+          [
+            "sombra_fortaleza",
+            0.1497
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.4791
+          ],
+          [
+            "sombra_fortaleza",
+            0.2287
+          ],
+          [
+            "casual_social",
+            0.1653
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_angel_atardecer",
+        "top3": [
+          [
+            "sombra_angel_atardecer",
+            0.4543
+          ],
+          [
+            "sombra_fortaleza",
+            0.4207
+          ],
+          [
+            "sombra_rechazo",
+            0.297
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.5386
+          ],
+          [
+            "sombra_rechazo",
+            0.3249
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.3067
+          ]
+        ],
+        "category": "sombras"
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          [
+            "gym_rutina",
+            0.2595
+          ],
+          [
+            "sombra_fortaleza",
+            0.2097
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.1329
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.2864
+          ],
+          [
+            "sombra_fortaleza",
+            0.1501
+          ],
+          [
+            "sombra_rechazo",
+            0.1462
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3851
+          ],
+          [
+            "sombra_rechazo",
+            0.2269
+          ],
+          [
+            "peer_usuario",
+            0.0868
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "expected": [
+          "casual_social",
+          "gym_rutina"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.1964
+          ],
+          [
+            "peer_skills",
+            0.1627
+          ],
+          [
+            "gym_rutina",
+            0.155
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.2238
+          ],
+          [
+            "peer_identidad",
+            0.2141
+          ],
+          [
+            "programacion",
+            0.1765
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          [
+            "nanobot_sistema",
+            0.2726
+          ],
+          [
+            "peer_skills",
+            0.2574
+          ],
+          [
+            "peer_herramientas",
+            0.2424
+          ]
+        ],
+        "category": "temas"
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.375
+          ],
+          [
+            "peer_identidad",
+            0.209
+          ],
+          [
+            "peer_usuario",
+            0.1977
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          [
+            "proyecto_juego",
+            0.3032
+          ],
+          [
+            "peer_identidad",
+            0.2036
+          ],
+          [
+            "nanobot_sistema",
+            0.1593
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.2435
+          ],
+          [
+            "valle_alto",
+            0.2249
+          ],
+          [
+            "peer_usuario",
+            0.1682
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.1458
+          ],
+          [
+            "peer_identidad",
+            0.117
+          ],
+          [
+            "peer_herramientas",
+            0.111
+          ]
+        ],
+        "category": "proyectos"
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          [
+            "sombra_rechazo",
+            0.4074
+          ],
+          [
+            "sombra_fortaleza",
+            0.3299
+          ],
+          [
+            "casual_social",
+            0.2106
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          [
+            "nanobot_sistema",
+            0.3236
+          ],
+          [
+            "peer_skills",
+            0.2784
+          ],
+          [
+            "programacion",
+            0.2671
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "peer_operativo",
+        "top3": [
+          [
+            "peer_operativo",
+            0.3296
+          ],
+          [
+            "nanobot_sistema",
+            0.3017
+          ],
+          [
+            "peer_skills",
+            0.258
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.3104
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.2505
+          ],
+          [
+            "gym_rutina",
+            0.2219
+          ]
+        ],
+        "category": "sistema"
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          [
+            "sombra_fortaleza",
+            0.3479
+          ],
+          [
+            "sombra_rechazo",
+            0.3112
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.28
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_skills",
+        "top3": [
+          [
+            "peer_skills",
+            0.3067
+          ],
+          [
+            "nanobot_sistema",
+            0.3055
+          ],
+          [
+            "peer_usuario",
+            0.2608
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "expected": [
+          "casual_social",
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          [
+            "sombra_muerte",
+            0.3252
+          ],
+          [
+            "sombra_angel_atardecer",
+            0.2459
+          ],
+          [
+            "sombra_fortaleza",
+            0.2178
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          [
+            "peer_usuario",
+            0.244
+          ],
+          [
+            "peer_operativo",
+            0.2037
+          ],
+          [
+            "peer_skills",
+            0.2008
+          ]
+        ],
+        "category": "hard"
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "expected": [
+          "valle_alto",
+          "programacion",
+          "sombra_fortaleza"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          [
+            "casual_social",
+            0.2744
+          ],
+          [
+            "sombra_rechazo",
+            0.2257
+          ],
+          [
+            "peer_identidad",
+            0.1996
+          ]
+        ],
+        "category": "hard"
+      }
+    ]
+  }
+}

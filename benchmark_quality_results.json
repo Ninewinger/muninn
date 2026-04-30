@@ -1,0 +1,990 @@
+[
+  {
+    "model": "BAAI/bge-m3",
+    "dims": 1024,
+    "load_time_s": 42.6,
+    "top1_accuracy": 0.519,
+    "top3_accuracy": 0.741,
+    "mean_mrr": 0.676,
+    "mean_gap": 0.0156,
+    "latency_p50_ms": 38.7,
+    "latency_avg_ms": 46.8,
+    "latency_max_ms": 208.4,
+    "categories": {
+      "sombras": {
+        "n": 8,
+        "top1": 0.75,
+        "top3": 1.0,
+        "mrr": 0.875,
+        "gap": 0.082
+      },
+      "temas": {
+        "n": 6,
+        "top1": 0.667,
+        "top3": 0.667,
+        "mrr": 0.719,
+        "gap": 0.0207
+      },
+      "proyectos": {
+        "n": 4,
+        "top1": 0.5,
+        "top3": 1.0,
+        "mrr": 0.708,
+        "gap": -0.0195
+      },
+      "sistema": {
+        "n": 4,
+        "top1": 0.0,
+        "top3": 0.5,
+        "mrr": 0.362,
+        "gap": -0.0521
+      },
+      "hard": {
+        "n": 5,
+        "top1": 0.4,
+        "top3": 0.4,
+        "mrr": 0.53,
+        "gap": -0.0143
+      }
+    },
+    "failures": [
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "category": "sombras",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          "sombra_fortaleza",
+          "sombra_angel_atardecer",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.6085,
+          0.589,
+          0.5842
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0194,
+        "latency_ms": 40.7
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "category": "sombras",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_angel_atardecer",
+          "sombra_fortaleza"
+        ],
+        "top3_scores": [
+          0.581,
+          0.5802,
+          0.5768
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0009,
+        "latency_ms": 50.3
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "category": "temas",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_angel_atardecer",
+          "casual_social"
+        ],
+        "top3_scores": [
+          0.4826,
+          0.4822,
+          0.474
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.1111111111111111,
+        "gap": -0.0166,
+        "latency_ms": 35.0
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "category": "temas",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          "peer_identidad",
+          "peer_herramientas",
+          "peer_skills"
+        ],
+        "top3_scores": [
+          0.5304,
+          0.498,
+          0.478
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0732,
+        "latency_ms": 32.7
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "category": "proyectos",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "peer_operativo",
+          "valle_alto"
+        ],
+        "top3_scores": [
+          0.5631,
+          0.5116,
+          0.4634
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.3333333333333333,
+        "gap": -0.0997,
+        "latency_ms": 29.6
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "category": "proyectos",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "valle_alto",
+          "nanobot_sistema"
+        ],
+        "top3_scores": [
+          0.4463,
+          0.4314,
+          0.414
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.015,
+        "latency_ms": 29.0
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "category": "sistema",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          "sombra_rechazo",
+          "sombra_fortaleza",
+          "sombra_muerte"
+        ],
+        "top3_scores": [
+          0.5846,
+          0.5473,
+          0.4976
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.1066,
+        "latency_ms": 39.1
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "category": "sistema",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_skills",
+          "programacion"
+        ],
+        "top3_scores": [
+          0.5823,
+          0.5633,
+          0.5499
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.019,
+        "latency_ms": 34.5
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "category": "sistema",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_operativo",
+          "peer_herramientas"
+        ],
+        "top3_scores": [
+          0.697,
+          0.6375,
+          0.5962
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0595,
+        "latency_ms": 31.7
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "category": "sistema",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          "peer_identidad",
+          "gym_rutina",
+          "peer_operativo"
+        ],
+        "top3_scores": [
+          0.5025,
+          0.4918,
+          0.4808
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.25,
+        "gap": -0.0234,
+        "latency_ms": 36.5
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_skills",
+          "peer_usuario"
+        ],
+        "top3_scores": [
+          0.626,
+          0.6172,
+          0.5558
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.25,
+        "gap": -0.087,
+        "latency_ms": 35.9
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "sombra_angel_atardecer",
+          "peer_skills"
+        ],
+        "top3_scores": [
+          0.513,
+          0.486,
+          0.4773
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0474,
+        "latency_ms": 43.9
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "sombra_fortaleza",
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "peer_operativo",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.4919,
+          0.47,
+          0.4588
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0447,
+        "latency_ms": 38.3
+      }
+    ],
+    "all_results": [
+      {
+        "query": "soñé que mi abuela se caía y no podía levantarla",
+        "category": "sombras",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_fortaleza",
+          "valle_alto"
+        ],
+        "top3_scores": [
+          0.5532,
+          0.4859,
+          0.4575
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0673,
+        "latency_ms": 82.7
+      },
+      {
+        "query": "me mandaron el curriculum para arriba, ni me contestaron",
+        "category": "sombras",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          "sombra_rechazo",
+          "nanobot_sistema",
+          "peer_identidad"
+        ],
+        "top3_scores": [
+          0.6169,
+          0.4772,
+          0.4687
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.1397,
+        "latency_ms": 208.4
+      },
+      {
+        "query": "siento que cuando algo me va bien, algo malo tiene que pasar",
+        "category": "sombras",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          "sombra_fortaleza",
+          "sombra_angel_atardecer",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.6085,
+          0.589,
+          0.5842
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0194,
+        "latency_ms": 40.7
+      },
+      {
+        "query": "no sé si tengo realmente la disciplina para esto o soy débil",
+        "category": "sombras",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          "sombra_fortaleza",
+          "sombra_rechazo",
+          "sombra_angel_atardecer"
+        ],
+        "top3_scores": [
+          0.587,
+          0.5633,
+          0.5465
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0237,
+        "latency_ms": 45.6
+      },
+      {
+        "query": "mi nona está internada y los médicos no saben qué tiene",
+        "category": "sombras",
+        "expected": [
+          "sombra_muerte"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_rechazo",
+          "sombra_angel_atardecer"
+        ],
+        "top3_scores": [
+          0.7255,
+          0.5095,
+          0.4642
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.216,
+        "latency_ms": 33.4
+      },
+      {
+        "query": "mis amigos salieron sin mí, ni me avisaron",
+        "category": "sombras",
+        "expected": [
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          "sombra_rechazo",
+          "casual_social",
+          "sombra_fortaleza"
+        ],
+        "top3_scores": [
+          0.6632,
+          0.5184,
+          0.5023
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.1448,
+        "latency_ms": 31.4
+      },
+      {
+        "query": "cada vez que logro algo bueno, me viene la ansiedad de que se va a arruinar",
+        "category": "sombras",
+        "expected": [
+          "sombra_angel_atardecer"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_angel_atardecer",
+          "sombra_fortaleza"
+        ],
+        "top3_scores": [
+          0.581,
+          0.5802,
+          0.5768
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0009,
+        "latency_ms": 50.3
+      },
+      {
+        "query": "quiero ser fuerte pero me cuesta mantener la constancia",
+        "category": "sombras",
+        "expected": [
+          "sombra_fortaleza"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          "sombra_fortaleza",
+          "sombra_angel_atardecer",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.6217,
+          0.5368,
+          0.4969
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0849,
+        "latency_ms": 48.9
+      },
+      {
+        "query": "hoy tocaba pecho y tríceps pero me duele el hombro",
+        "category": "temas",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          "gym_rutina",
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.51,
+          0.4748,
+          0.4736
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0352,
+        "latency_ms": 47.4
+      },
+      {
+        "query": "estoy pensando en tomar creatina, qué opinas?",
+        "category": "temas",
+        "expected": [
+          "gym_rutina"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_angel_atardecer",
+          "casual_social"
+        ],
+        "top3_scores": [
+          0.4826,
+          0.4822,
+          0.474
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.1111111111111111,
+        "gap": -0.0166,
+        "latency_ms": 35.0
+      },
+      {
+        "query": "voy a salir con unos amigos al bar del centro",
+        "category": "temas",
+        "expected": [
+          "casual_social"
+        ],
+        "predicted": "casual_social",
+        "top3": [
+          "casual_social",
+          "sombra_rechazo",
+          "sombra_angel_atardecer"
+        ],
+        "top3_scores": [
+          0.538,
+          0.5189,
+          0.466
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0191,
+        "latency_ms": 36.0
+      },
+      {
+        "query": "me agregó una chica del gym a Instagram",
+        "category": "temas",
+        "expected": [
+          "gym_rutina",
+          "casual_social"
+        ],
+        "predicted": "gym_rutina",
+        "top3": [
+          "gym_rutina",
+          "casual_social",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.4997,
+          0.4907,
+          0.4827
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.017,
+        "latency_ms": 49.9
+      },
+      {
+        "query": "estoy aprendiendo sobre decoradores en python, los closures me confunden",
+        "category": "temas",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "programacion",
+        "top3": [
+          "programacion",
+          "sombra_rechazo",
+          "peer_identidad"
+        ],
+        "top3_scores": [
+          0.6223,
+          0.4797,
+          0.4674
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.1426,
+        "latency_ms": 40.9
+      },
+      {
+        "query": "¿cómo funciona un context manager? quiero entender el protocolo",
+        "category": "temas",
+        "expected": [
+          "programacion"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          "peer_identidad",
+          "peer_herramientas",
+          "peer_skills"
+        ],
+        "top3_scores": [
+          0.5304,
+          0.498,
+          0.478
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0732,
+        "latency_ms": 32.7
+      },
+      {
+        "query": "estoy pensando en la mecánica de niveles para el juego, debería ser infinito",
+        "category": "proyectos",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          "proyecto_juego",
+          "sombra_angel_atardecer",
+          "peer_identidad"
+        ],
+        "top3_scores": [
+          0.5508,
+          0.5292,
+          0.5073
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0215,
+        "latency_ms": 38.3
+      },
+      {
+        "query": "los NPCs del juego deberían tener las mismas habilidades que el jugador",
+        "category": "proyectos",
+        "expected": [
+          "proyecto_juego"
+        ],
+        "predicted": "proyecto_juego",
+        "top3": [
+          "proyecto_juego",
+          "peer_identidad",
+          "peer_skills"
+        ],
+        "top3_scores": [
+          0.5305,
+          0.5153,
+          0.494
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0152,
+        "latency_ms": 43.1
+      },
+      {
+        "query": "tengo que armar el plan de negocios para Valle Alto",
+        "category": "proyectos",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "peer_operativo",
+          "valle_alto"
+        ],
+        "top3_scores": [
+          0.5631,
+          0.5116,
+          0.4634
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.3333333333333333,
+        "gap": -0.0997,
+        "latency_ms": 29.6
+      },
+      {
+        "query": "cuánto cobrar por un sistema de inventario para un cliente",
+        "category": "proyectos",
+        "expected": [
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "valle_alto",
+          "nanobot_sistema"
+        ],
+        "top3_scores": [
+          0.4463,
+          0.4314,
+          0.414
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.015,
+        "latency_ms": 29.0
+      },
+      {
+        "query": "quién soy yo realmente? a veces no me reconozco",
+        "category": "sistema",
+        "expected": [
+          "peer_identidad"
+        ],
+        "predicted": "sombra_rechazo",
+        "top3": [
+          "sombra_rechazo",
+          "sombra_fortaleza",
+          "sombra_muerte"
+        ],
+        "top3_scores": [
+          0.5846,
+          0.5473,
+          0.4976
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.1066,
+        "latency_ms": 39.1
+      },
+      {
+        "query": "puedes actualizarme el skill de debugging?",
+        "category": "sistema",
+        "expected": [
+          "peer_skills"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_skills",
+          "programacion"
+        ],
+        "top3_scores": [
+          0.5823,
+          0.5633,
+          0.5499
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.019,
+        "latency_ms": 34.5
+      },
+      {
+        "query": "configura un cron job para revisar mis notas cada día",
+        "category": "sistema",
+        "expected": [
+          "peer_herramientas",
+          "peer_operativo"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_operativo",
+          "peer_herramientas"
+        ],
+        "top3_scores": [
+          0.697,
+          0.6375,
+          0.5962
+        ],
+        "top1_hit": false,
+        "top3_hit": true,
+        "mrr": 0.5,
+        "gap": -0.0595,
+        "latency_ms": 31.7
+      },
+      {
+        "query": "qué aprendimos la sesión pasada?",
+        "category": "sistema",
+        "expected": [
+          "peer_usuario",
+          "nanobot_sistema"
+        ],
+        "predicted": "peer_identidad",
+        "top3": [
+          "peer_identidad",
+          "gym_rutina",
+          "peer_operativo"
+        ],
+        "top3_scores": [
+          0.5025,
+          0.4918,
+          0.4808
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.25,
+        "gap": -0.0234,
+        "latency_ms": 36.5
+      },
+      {
+        "query": "estoy cansado de intentar y que nada funcione",
+        "category": "hard",
+        "expected": [
+          "sombra_fortaleza",
+          "sombra_rechazo"
+        ],
+        "predicted": "sombra_fortaleza",
+        "top3": [
+          "sombra_fortaleza",
+          "sombra_rechazo",
+          "sombra_angel_atardecer"
+        ],
+        "top3_scores": [
+          0.5994,
+          0.598,
+          0.5568
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.0426,
+        "latency_ms": 38.7
+      },
+      {
+        "query": "quiero hacer una app para el gym que trackee mis ejercicios",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "nanobot_sistema",
+        "top3": [
+          "nanobot_sistema",
+          "peer_skills",
+          "peer_usuario"
+        ],
+        "top3_scores": [
+          0.626,
+          0.6172,
+          0.5558
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.25,
+        "gap": -0.087,
+        "latency_ms": 35.9
+      },
+      {
+        "query": "un amigo me contó que su mamá está enferma y me afectó mucho",
+        "category": "hard",
+        "expected": [
+          "sombra_muerte",
+          "casual_social"
+        ],
+        "predicted": "sombra_muerte",
+        "top3": [
+          "sombra_muerte",
+          "sombra_rechazo",
+          "casual_social"
+        ],
+        "top3_scores": [
+          0.611,
+          0.546,
+          0.5382
+        ],
+        "top1_hit": true,
+        "top3_hit": true,
+        "mrr": 1.0,
+        "gap": 0.065,
+        "latency_ms": 40.1
+      },
+      {
+        "query": "cómo puedo organizarme mejor para estudiar python y también ir al gym",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "gym_rutina"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "sombra_angel_atardecer",
+          "peer_skills"
+        ],
+        "top3_scores": [
+          0.513,
+          0.486,
+          0.4773
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0474,
+        "latency_ms": 43.9
+      },
+      {
+        "query": "hice mi primera venta programando algo para un conocido",
+        "category": "hard",
+        "expected": [
+          "programacion",
+          "sombra_fortaleza",
+          "valle_alto"
+        ],
+        "predicted": "peer_usuario",
+        "top3": [
+          "peer_usuario",
+          "peer_operativo",
+          "sombra_rechazo"
+        ],
+        "top3_scores": [
+          0.4919,
+          0.47,
+          0.4588
+        ],
+        "top1_hit": false,
+        "top3_hit": false,
+        "mrr": 0.2,
+        "gap": -0.0447,
+        "latency_ms": 38.3
+      }
+    ]
+  }
+]

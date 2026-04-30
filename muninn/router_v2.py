@@ -1,19 +1,17 @@
-"""Semantic router v0.2 — Disco Elysium multi-activation with facets.
+"""Semantic router v0.3 — Strategy C: composite + faceted hybrid.
 
 Architecture:
-  - Each peer has N facets (emocional, fisico, social, contextual, tecnico)
-  - Each facet has its own embedding
-  - Input text is compared against ALL facets
-  - Best facet per peer determines peer activation
-  - Multiple peers can activate simultaneously
-  - Top-K activations are returned with context for injection
+  - Strategy A/B (faceted): compare query against individual facet embeddings
+  - Strategy C (composite): build rich text per peer dynamically, embed once, compare
+  - Strategy hybrid: blend faceted + composite scores for best of both worlds
   - Optional: bge-reranker-v2-m3 cross-encoder refines ranking
 """
 
 import os
 import sqlite3
 import struct
-from typing import List, Dict, Optional
+import hashlib
+from typing import List, Dict, Optional, Tuple
 from datetime import datetime
 
 from .embeddings_v2 import embed, embed_batch, cosine_similarity, get_backend
@@ -21,6 +19,9 @@ from .db import get_connection
 
 # Reranker singleton
 _reranker = None
+
+# Composite embedding cache: {(db_path_hash, peer_id): (embedding, content_hash)}
+_composite_cache: Dict[Tuple[str, str], Tuple[List[float], str]] = {}
 
 
 def get_reranker():
@@ -38,63 +39,103 @@ def get_reranker():
     return _reranker
 
 
-def route(
-    text: str,
-    db_path: str | None = None,
-    top_k: int = 3,
-    context_hour: int | None = None,
-    instruction_override: str | None = None,
-    use_reranker: bool = True,
-) -> List[Dict]:
-    """
-    Multi-activation routing: evaluate text against all peer facets.
+def _build_composite_text(peer: dict, facets: List[dict]) -> str:
+    """Build a single composite text for a peer from all its data."""
+    parts = []
 
-    Flow:
-      1. Embed query → cosine similarity against all facet embeddings
-      2. Filter by activation threshold
-      3. If reranker available: rerank top-N candidates via cross-encoder
-      4. Return top_k activations sorted by final score
+    # Name and domain
+    name = peer.get("name", peer.get("id", ""))
+    domain = peer.get("domain", "")
+    if domain:
+        parts.append(f"{name} ({domain})")
+    else:
+        parts.append(name)
 
-    Returns list of dicts with activation details, sorted by total_score desc.
-    """
+    # Description
+    desc = peer.get("description")
+    if desc:
+        parts.append(desc)
+
+    # Representation (what gets injected when activated)
+    rep = peer.get("representation")
+    if rep:
+        parts.append(f"Contexto activo: {rep}")
+
+    # Tags
+    tags = peer.get("tags", "[]")
+    if tags and tags != "[]":
+        parts.append(f"Etiquetas: {tags}")
+
+    # All facet texts
+    if facets:
+        facet_parts = []
+        for f in facets:
+            ftype = f.get("facet_type", "")
+            ftext = f.get("text", "")
+            if ftext:
+                facet_parts.append(f"{ftype}: {ftext}")
+        if facet_parts:
+            parts.append("Facetas: " + ". ".join(facet_parts))
+
+    return ". ".join(parts)
+
+
+def _get_composite_embeddings(
+    conn: sqlite3.Connection,
+    peer_data: Dict[str, dict],
+    db_path: str,
+    instruction: str | None = None,
+) -> Dict[str, List[float]]:
+    """Get or compute composite embeddings for all peers. Uses cache."""
     backend = get_backend()
+    result = {}
+    to_embed = {}
 
-    # Get instruction from DB config or use override
-    instruction = instruction_override
-    if not instruction:
-        try:
-            conn_temp = get_connection(db_path)
-            row = conn_temp.execute(
-                "SELECT value FROM embedding_config WHERE key = 'instruction'"
-            ).fetchone()
-            if row:
-                instruction = row["value"]
-            conn_temp.close()
-        except Exception:
-            pass
+    for pid, peer in peer_data.items():
+        # Get facets for this peer
+        facets = conn.execute(
+            "SELECT facet_type, text, weight FROM peer_facets WHERE peer_id = ?",
+            [pid]
+        ).fetchall()
+        facets = [dict(f) for f in facets]
 
-    # Embed the input text as a query (with instruction)
-    text_embedding = embed(text, is_query=True, instruction=instruction)
+        composite_text = _build_composite_text(peer, facets)
+        content_hash = hashlib.md5(composite_text.encode()).hexdigest()
 
-    conn = get_connection(db_path)
+        # Check cache
+        cache_key = (db_path or ":memory:", pid)
+        cached = _composite_cache.get(cache_key)
+        if cached and cached[1] == content_hash:
+            result[pid] = cached[0]
+        else:
+            to_embed[pid] = (composite_text, content_hash)
 
-    # Get all active peers
-    peers = conn.execute("""
-        SELECT p.id, p.name, p.type, p.domain, p.representation,
-               p.activation_threshold, p.confidence, p.level, p.tags
-        FROM peers p
-        WHERE p.is_active = 1
-    """).fetchall()
+    # Embed uncached composites
+    if to_embed:
+        texts = [v[0] for v in to_embed.values()]
+        pids = list(to_embed.keys())
+        hashes = [v[1] for v in to_embed.values()]
 
-    if not peers:
-        conn.close()
-        return []
+        embeddings = embed_batch(texts, is_query=False, instruction=instruction)
 
-    peer_data = {p["id"]: dict(p) for p in peers}
-    thresholds = {p["id"]: p["activation_threshold"] for p in peers}
-    levels = {p["id"]: p["level"] for p in peers}
+        for pid, emb, chash in zip(pids, embeddings, hashes):
+            cache_key = (db_path or ":memory:", pid)
+            _composite_cache[cache_key] = (emb, chash)
+            result[pid] = emb
 
-    # Get all facets for active peers
+    return result
+
+
+def _route_faceted(
+    text_embedding: List[float],
+    conn: sqlite3.Connection,
+    peer_data: Dict[str, dict],
+    thresholds: Dict[str, float],
+    levels: Dict[str, float],
+    context_hour: int | None,
+    backend,
+) -> List[Dict]:
+    """Strategy A/B: compare against individual facets (original logic)."""
     facets = conn.execute("""
         SELECT pf.id, pf.peer_id, pf.facet_type, pf.text, pf.weight
         FROM peer_facets pf
@@ -102,25 +143,20 @@ def route(
     """ % ",".join(f"'{pid}'" for pid in peer_data.keys())).fetchall()
 
     if not facets:
-        conn.close()
         return []
 
-    # Get stored facet embeddings and compute similarity
-    peer_best_scores = {}  # peer_id -> best activation
+    peer_best_scores = {}
 
     for facet in facets:
         fid = facet["id"]
         pid = facet["peer_id"]
 
-        # Get stored embedding
         row = conn.execute(
             "SELECT embedding FROM facet_embeddings WHERE facet_id = ?", [fid]
         ).fetchone()
-
         if not row:
             continue
 
-        # Unpack embedding bytes
         dims = backend.dimensions
         try:
             stored_vec = list(struct.unpack(f"{dims}f", row["embedding"]))
@@ -129,22 +165,11 @@ def route(
 
         similarity = cosine_similarity(text_embedding, stored_vec)
 
-        # Bonus de nivel (peers más activos pesan más)
         level_bonus = (levels.get(pid, 1.0) - 1.0) * 0.05
-
-        # Bonus de contexto (hora)
-        context_bonus = 0.0
-        if context_hour is not None:
-            # Angel del atardecer: bonus si es tarde/noche
-            if pid == "sombra_angel_atardecer" and 17 <= context_hour <= 23:
-                context_bonus = 0.05
-            # Casual: bonus si es fuera de horario laboral
-            if pid == "casual_social" and (context_hour < 9 or context_hour > 21):
-                context_bonus = 0.03
+        context_bonus = _compute_context_bonus(pid, context_hour)
 
         total_score = similarity + level_bonus + context_bonus
 
-        # Track best facet per peer
         if pid not in peer_best_scores or total_score > peer_best_scores[pid]["total_score"]:
             peer_best_scores[pid] = {
                 "peer_id": pid,
@@ -157,32 +182,192 @@ def route(
                 "total_score": total_score,
             }
 
-    conn.close()
-
     # Filter by threshold
-    activated = [
+    return [
         act for pid, act in peer_best_scores.items()
         if act["total_score"] >= thresholds.get(pid, 0.25)
     ]
 
-    # Sort by embedding similarity desc
+
+def _route_composite(
+    text_embedding: List[float],
+    conn: sqlite3.Connection,
+    peer_data: Dict[str, dict],
+    thresholds: Dict[str, float],
+    levels: Dict[str, float],
+    context_hour: int | None,
+    db_path: str,
+    instruction: str | None = None,
+) -> List[Dict]:
+    """Strategy C: compare against composite peer embeddings."""
+    composite_embs = _get_composite_embeddings(conn, peer_data, db_path, instruction)
+
+    activated = []
+    for pid, comp_emb in composite_embs.items():
+        similarity = cosine_similarity(text_embedding, comp_emb)
+
+        level_bonus = (levels.get(pid, 1.0) - 1.0) * 0.05
+        context_bonus = _compute_context_bonus(pid, context_hour)
+        total_score = similarity + level_bonus + context_bonus
+
+        if total_score >= thresholds.get(pid, 0.25):
+            activated.append({
+                "peer_id": pid,
+                "facet_type": "composite",
+                "facet_text": _build_composite_text(
+                    peer_data[pid],
+                    [dict(f) for f in conn.execute(
+                        "SELECT facet_type, text FROM peer_facets WHERE peer_id = ?", [pid]
+                    ).fetchall()]
+                )[:200],  # truncate for display
+                "similarity": similarity,
+                "bonus_level": level_bonus,
+                "bonus_context": context_bonus,
+                "total_score": total_score,
+            })
+
+    return activated
+
+
+def _compute_context_bonus(peer_id: str, context_hour: int | None) -> float:
+    """Compute context-based bonus (time of day, etc.)."""
+    bonus = 0.0
+    if context_hour is not None:
+        if peer_id == "sombra_angel_atardecer" and 17 <= context_hour <= 23:
+            bonus += 0.05
+        if peer_id == "casual_social" and (context_hour < 9 or context_hour > 21):
+            bonus += 0.03
+    return bonus
+
+
+def route(
+    text: str,
+    db_path: str | None = None,
+    top_k: int = 3,
+    context_hour: int | None = None,
+    instruction_override: str | None = None,
+    use_reranker: bool = True,
+    strategy: str = "composite",
+    alpha: float = 0.4,
+) -> List[Dict]:
+    """
+    Multi-activation routing with configurable strategy.
+
+    Strategies:
+      - 'faceted': original facet-by-facet comparison (Strategy A/B)
+      - 'composite': dynamic composite text per peer (Strategy C)
+      - 'hybrid': blend of faceted + composite (alpha controls blend)
+
+    Args:
+        alpha: blend factor for hybrid (0.0 = pure composite, 1.0 = pure faceted)
+    """
+    # Read DB config early (model_name + instruction) before any backend calls
+    instruction = instruction_override
+    if not instruction or not os.getenv("EMBEDDING_MODEL"):
+        try:
+            conn_temp = get_connection(db_path)
+            if not instruction:
+                row = conn_temp.execute(
+                    "SELECT value FROM embedding_config WHERE key = 'instruction'"
+                ).fetchone()
+                if row:
+                    instruction = row["value"]
+            if not os.getenv("EMBEDDING_MODEL"):
+                model_row = conn_temp.execute(
+                    "SELECT value FROM embedding_config WHERE key = 'model_name'"
+                ).fetchone()
+                if model_row:
+                    os.environ["EMBEDDING_MODEL"] = model_row["value"]
+            conn_temp.close()
+        except Exception:
+            pass
+
+    backend = get_backend(db_path=db_path)
+
+    # Embed the input text as a query (with instruction)
+    text_embedding = embed(text, is_query=True, instruction=instruction)
+
+    conn = get_connection(db_path)
+
+    # Get all active peers
+    peers = conn.execute("""
+        SELECT p.id, p.name, p.type, p.domain, p.representation,
+               p.activation_threshold, p.confidence, p.level, p.tags,
+               p.description
+        FROM peers p
+        WHERE p.is_active = 1
+    """).fetchall()
+
+    if not peers:
+        conn.close()
+        return []
+
+    peer_data = {p["id"]: dict(p) for p in peers}
+    thresholds = {p["id"]: p["activation_threshold"] for p in peers}
+    levels = {p["id"]: p["level"] for p in peers}
+
+    if strategy == "faceted":
+        activated = _route_faceted(
+            text_embedding, conn, peer_data, thresholds, levels, context_hour, backend
+        )
+
+    elif strategy == "composite":
+        activated = _route_composite(
+            text_embedding, conn, peer_data, thresholds, levels, context_hour,
+            db_path or "", instruction
+        )
+
+    elif strategy == "hybrid":
+        faceted = _route_faceted(
+            text_embedding, conn, peer_data, thresholds, levels, context_hour, backend
+        )
+        composite = _route_composite(
+            text_embedding, conn, peer_data, thresholds, levels, context_hour,
+            db_path or "", instruction
+        )
+
+        # Build score maps: peer_id -> total_score
+        faceted_map = {a["peer_id"]: a for a in faceted}
+        composite_map = {a["peer_id"]: a for a in composite}
+
+        # All activated peer IDs from either strategy
+        all_pids = set(faceted_map.keys()) | set(composite_map.keys())
+
+        activated = []
+        for pid in all_pids:
+            f_score = faceted_map[pid]["total_score"] if pid in faceted_map else 0.0
+            c_score = composite_map[pid]["total_score"] if pid in composite_map else 0.0
+            blended = alpha * f_score + (1 - alpha) * c_score
+
+            # Use the activation with higher individual score as base
+            base = faceted_map.get(pid) or composite_map.get(pid)
+            entry = dict(base)
+            entry["total_score"] = blended
+            entry["strategy"] = "hybrid"
+            entry["faceted_score"] = f_score
+            entry["composite_score"] = c_score
+            activated.append(entry)
+
+        # Re-filter by threshold (blended might dip below)
+        activated = [a for a in activated if a["total_score"] >= thresholds.get(a["peer_id"], 0.25)]
+    else:
+        raise ValueError(f"Unknown strategy: {strategy}. Use 'faceted', 'composite', or 'hybrid'")
+
+    # Sort by total_score desc
     activated.sort(key=lambda x: x["total_score"], reverse=True)
 
     # Rerank with cross-encoder if available and enough candidates
     if use_reranker and len(activated) > 1:
         reranker = get_reranker()
         if reranker is not None:
-            # Rerank top candidates (max 15 to keep it fast)
             top_n = min(15, len(activated))
-            pairs = [(text, act["facet_text"]) for act in activated[:top_n]]
+            pairs = [(text, act.get("facet_text", "")) for act in activated[:top_n]]
             rerank_scores = reranker.predict(pairs)
 
-            # Blend: use reranker score as the new total_score
             for i, score in enumerate(rerank_scores):
                 activated[i]["rerank_score"] = float(score)
                 activated[i]["total_score"] = float(score)
 
-            # Re-sort by reranker score
             activated[:top_n] = sorted(
                 activated[:top_n], key=lambda x: x["total_score"], reverse=True
             )
@@ -199,7 +384,19 @@ def route(
         act["representation"] = p.get("representation")
         act["confidence"] = p.get("confidence", 0.0)
 
+    conn.close()
     return activated
+
+
+def invalidate_composite_cache(db_path: str = None):
+    """Clear composite embedding cache (call after DB changes)."""
+    global _composite_cache
+    if db_path:
+        keys_to_remove = [k for k in _composite_cache if k[0] == db_path]
+        for k in keys_to_remove:
+            del _composite_cache[k]
+    else:
+        _composite_cache.clear()
 
 
 def route_with_context_injection(
@@ -207,6 +404,7 @@ def route_with_context_injection(
     db_path: str | None = None,
     top_k: int = 3,
     context_hour: int | None = None,
+    strategy: str = "composite",
 ) -> str:
     """
     Route and generate a context injection string from activated peers.
@@ -214,7 +412,7 @@ def route_with_context_injection(
     This is the main entry point for the agent — it returns a formatted
     string to inject into the conversation context.
     """
-    activations = route(text, db_path, top_k, context_hour)
+    activations = route(text, db_path, top_k, context_hour, strategy=strategy)
 
     if not activations:
         return ""
@@ -225,6 +423,7 @@ def route_with_context_injection(
         parts.append(peer_line)
         if act.get("representation"):
             parts.append(f"  Contexto: {act['representation']}")
-        parts.append(f"  Activado por faceta {act['facet_type']} (score: {act['total_score']:.3f})")
+        strategy_tag = act.get("strategy", strategy)
+        parts.append(f"  Activado por {act['facet_type']} ({strategy_tag}, score: {act['total_score']:.3f})")
 
     return "\n".join(parts)

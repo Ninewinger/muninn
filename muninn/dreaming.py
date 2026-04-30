@@ -28,8 +28,8 @@ from .router_v2 import route
 # ══════════════════════════════════════════════════════════════
 
 # Relevancia mínima para crear memoria permanente
-MEMORY_THRESHOLD_HIGH = 0.50    # alta → memoria permanente
-MEMORY_THRESHOLD_LOW = 0.35    # media → memoria temporal (baja confianza)
+MEMORY_THRESHOLD_HIGH = 0.50  # alta → memoria permanente
+MEMORY_THRESHOLD_LOW = 0.35  # media → memoria temporal (baja confianza)
 MEMORY_THRESHOLD_FORGET = 0.25  # bajo → no crear memoria
 
 # Decay: memorias con confianza < esto después de N días se olvidan
@@ -46,6 +46,7 @@ REPRESENTATION_UPDATE_INTERVAL = 10
 # ══════════════════════════════════════════════════════════════
 # DREAMING: PROCESO PRINCIPAL
 # ══════════════════════════════════════════════════════════════
+
 
 def dream(
     db_path: Optional[str] = None,
@@ -111,6 +112,11 @@ def dream(
             updated = _update_representations(conn, db_path)
             stats["peers_updated"] = len(updated)
 
+        # ── PASO 4.5: Merge similar facets ────────────────────
+        if not dry_run:
+            merged = _merge_similar_facets(conn, db_path)
+            stats["facets_merged"] = merged
+
         # ── PASO 5: Olvido (decay) ────────────────────────────
         if not dry_run:
             forgotten = _forget_memories(conn)
@@ -134,6 +140,7 @@ def dream(
 # ══════════════════════════════════════════════════════════════
 # PASO 1: Eventos no procesados
 # ══════════════════════════════════════════════════════════════
+
 
 def _get_unprocessed_events(conn, session_id=None):
     """
@@ -165,6 +172,7 @@ def _get_unprocessed_events(conn, session_id=None):
 # ══════════════════════════════════════════════════════════════
 # PASO 2: Procesar evento individual
 # ══════════════════════════════════════════════════════════════
+
 
 def _process_event(conn, event, db_path=None, dry_run=False):
     """
@@ -222,24 +230,31 @@ def _process_event(conn, event, db_path=None, dry_run=False):
         "best_score": round(best_score, 4),
         "activated_peers": peer_ids,
         "activated_facets": [
-            {"peer_id": a["peer_id"], "facet_id": a["facet_id"], "facet_type": a["facet_type"]}
+            {
+                "peer_id": a["peer_id"],
+                "facet_id": a["facet_id"],
+                "facet_type": a["facet_type"],
+            }
             for a in activated
         ],
         "session_id": event["session_id"],
     }
 
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO memories (content, type, source, confidence, occurred_at, session_id, source_channel, metadata)
         VALUES (?, ?, 'dreaming', ?, ?, ?, ?, ?)
-    """, [
-        content,
-        memory_type,
-        confidence,
-        event["created_at"],
-        event["session_id"],
-        event["channel"],
-        json.dumps(metadata),
-    ])
+    """,
+        [
+            content,
+            memory_type,
+            confidence,
+            event["created_at"],
+            event["session_id"],
+            event["channel"],
+            json.dumps(metadata),
+        ],
+    )
 
     memory_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
@@ -247,17 +262,23 @@ def _process_event(conn, event, db_path=None, dry_run=False):
     _store_memory_embedding(conn, memory_id, content)
 
     # Index in FTS
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO memory_fts (rowid, content, type, source)
         VALUES (?, ?, ?, ?)
-    """, [memory_id, content, memory_type, "dreaming"])
+    """,
+        [memory_id, content, memory_type, "dreaming"],
+    )
 
     # Link memory to activated peers
     for a in activated:
-        conn.execute("""
+        conn.execute(
+            """
             INSERT OR IGNORE INTO memory_peers (memory_id, peer_id, relevance)
             VALUES (?, ?, ?)
-        """, [memory_id, a["peer_id"], a["similarity"]])
+        """,
+            [memory_id, a["peer_id"], a["similarity"]],
+        )
 
     conn.commit()
 
@@ -273,28 +294,34 @@ def _process_event(conn, event, db_path=None, dry_run=False):
 def _record_activations(conn, event_id, activated):
     """Record which peers+facets activated for an event."""
     for a in activated:
-        conn.execute("""
+        conn.execute(
+            """
             INSERT INTO activations (event_id, peer_id, facet_id, similarity,
                                     bonus_level, bonus_context, total_score)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, [
-            event_id,
-            a["peer_id"],
-            a["facet_id"],
-            a["similarity"],
-            a.get("bonus_level", 0.0),
-            a.get("bonus_context", 0.0),
-            a["total_score"],
-        ])
+        """,
+            [
+                event_id,
+                a["peer_id"],
+                a["facet_id"],
+                a["similarity"],
+                a.get("bonus_level", 0.0),
+                a.get("bonus_context", 0.0),
+                a["total_score"],
+            ],
+        )
 
         # Increment activation count
-        conn.execute("""
+        conn.execute(
+            """
             UPDATE peers
             SET activation_count = activation_count + 1,
                 last_activated_at = datetime('now'),
                 updated_at = datetime('now')
             WHERE id = ?
-        """, [a["peer_id"]])
+        """,
+            [a["peer_id"]],
+        )
 
 
 def _store_memory_embedding(conn, memory_id, text):
@@ -302,12 +329,16 @@ def _store_memory_embedding(conn, memory_id, text):
     vector = embed(text)
     vec_bytes = struct.pack(f"{len(vector)}f", *vector)
     conn.execute("DELETE FROM memory_embeddings WHERE memory_id = ?", [memory_id])
-    conn.execute("INSERT INTO memory_embeddings (memory_id, embedding) VALUES (?, ?)", [memory_id, vec_bytes])
+    conn.execute(
+        "INSERT INTO memory_embeddings (memory_id, embedding) VALUES (?, ?)",
+        [memory_id, vec_bytes],
+    )
 
 
 # ══════════════════════════════════════════════════════════════
 # PASO 3: Descubrir conexiones por co-activación
 # ══════════════════════════════════════════════════════════════
+
 
 def _discover_connections(conn):
     """
@@ -315,7 +346,8 @@ def _discover_connections(conn):
     If peer A and peer B activate together > COACTIVATION_THRESHOLD times,
     create a 'conecta' connection.
     """
-    pairs = conn.execute("""
+    pairs = conn.execute(
+        """
         SELECT
             a1.peer_id AS peer_a,
             a2.peer_id AS peer_b,
@@ -324,31 +356,43 @@ def _discover_connections(conn):
         JOIN activations a2 ON a1.event_id = a2.event_id AND a1.peer_id < a2.peer_id
         GROUP BY a1.peer_id, a2.peer_id
         HAVING COUNT(*) >= ?
-    """, [COACTIVATION_THRESHOLD]).fetchall()
+    """,
+        [COACTIVATION_THRESHOLD],
+    ).fetchall()
 
     new_connections = []
     for pair in pairs:
-        existing = conn.execute("""
+        existing = conn.execute(
+            """
             SELECT id FROM connections
             WHERE (from_peer_id = ? AND to_peer_id = ?)
                OR (from_peer_id = ? AND to_peer_id = ?)
-        """, [pair["peer_a"], pair["peer_b"], pair["peer_b"], pair["peer_a"]]).fetchone()
+        """,
+            [pair["peer_a"], pair["peer_b"], pair["peer_b"], pair["peer_a"]],
+        ).fetchone()
 
         if not existing:
             strength = min(1.0, pair["coactivation_count"] / 20.0)
-            conn.execute("""
+            conn.execute(
+                """
                 INSERT INTO connections (from_peer_id, to_peer_id, relation_type, strength, description)
                 VALUES (?, ?, 'conecta', ?, ?)
-            """, [
-                pair["peer_a"], pair["peer_b"], strength,
-                f"Co-activadas {pair['coactivation_count']} veces en los mismos eventos"
-            ])
-            new_connections.append({
-                "from": pair["peer_a"],
-                "to": pair["peer_b"],
-                "count": pair["coactivation_count"],
-                "strength": strength,
-            })
+            """,
+                [
+                    pair["peer_a"],
+                    pair["peer_b"],
+                    strength,
+                    f"Co-activadas {pair['coactivation_count']} veces en los mismos eventos",
+                ],
+            )
+            new_connections.append(
+                {
+                    "from": pair["peer_a"],
+                    "to": pair["peer_b"],
+                    "count": pair["coactivation_count"],
+                    "strength": strength,
+                }
+            )
 
     conn.commit()
     return new_connections
@@ -358,6 +402,7 @@ def _discover_connections(conn):
 # PASO 4: Actualizar representaciones
 # ══════════════════════════════════════════════════════════════
 
+
 def _update_representations(conn, db_path=None):
     """
     For peers with enough activations, update their confidence
@@ -366,23 +411,29 @@ def _update_representations(conn, db_path=None):
     The representation evolves as more memories are linked.
     Confidence increases with each relevant memory.
     """
-    peers = conn.execute("""
+    peers = conn.execute(
+        """
         SELECT p.* FROM peers p
         WHERE p.is_active = 1
         AND p.activation_count >= ?
-    """, [REPRESENTATION_UPDATE_INTERVAL]).fetchall()
+    """,
+        [REPRESENTATION_UPDATE_INTERVAL],
+    ).fetchall()
 
     updated = []
     for peer in peers:
         # Get top memories for this peer
-        memories = conn.execute("""
+        memories = conn.execute(
+            """
             SELECT m.content, mp.relevance
             FROM memories m
             JOIN memory_peers mp ON m.id = mp.memory_id
             WHERE mp.peer_id = ? AND m.is_active = 1
             ORDER BY mp.relevance DESC
             LIMIT 20
-        """, [peer["id"]]).fetchall()
+        """,
+            [peer["id"]],
+        ).fetchall()
 
         if not memories:
             continue
@@ -398,21 +449,26 @@ def _update_representations(conn, db_path=None):
 
         new_representation = (
             f"{peer['representation'] or peer['description']}\n\n"
-            f"Memorias clave ({len(memories)} total):\n"
-            + "\n".join(memory_summaries)
+            f"Memorias clave ({len(memories)} total):\n" + "\n".join(memory_summaries)
         )
 
         # Update peer
-        conn.execute("""
+        conn.execute(
+            """
             UPDATE peers
             SET confidence = ?, representation = ?, updated_at = datetime('now')
             WHERE id = ?
-        """, [round(new_confidence, 3), new_representation, peer["id"]])
+        """,
+            [round(new_confidence, 3), new_representation, peer["id"]],
+        )
 
         # Re-embed ALL facets for this peer with enriched representation
-        facets = conn.execute("""
+        facets = conn.execute(
+            """
             SELECT id, text FROM peer_facets WHERE peer_id = ?
-        """, [peer["id"]]).fetchall()
+        """,
+            [peer["id"]],
+        ).fetchall()
 
         # Optionally enrich facet text with memory context
         for facet in facets:
@@ -424,16 +480,23 @@ def _update_representations(conn, db_path=None):
 
             vector = embed(enriched_text)
             vec_bytes = struct.pack(f"{len(vector)}f", *vector)
-            conn.execute("DELETE FROM facet_embeddings WHERE facet_id = ?", [facet["id"]])
-            conn.execute("INSERT INTO facet_embeddings (facet_id, embedding) VALUES (?, ?)", [facet["id"], vec_bytes])
+            conn.execute(
+                "DELETE FROM facet_embeddings WHERE facet_id = ?", [facet["id"]]
+            )
+            conn.execute(
+                "INSERT INTO facet_embeddings (facet_id, embedding) VALUES (?, ?)",
+                [facet["id"], vec_bytes],
+            )
 
-        updated.append({
-            "peer_id": peer["id"],
-            "old_confidence": peer["confidence"],
-            "new_confidence": round(new_confidence, 3),
-            "memories": len(memories),
-            "facets_re_embedded": len(facets),
-        })
+        updated.append(
+            {
+                "peer_id": peer["id"],
+                "old_confidence": peer["confidence"],
+                "new_confidence": round(new_confidence, 3),
+                "memories": len(memories),
+                "facets_re_embedded": len(facets),
+            }
+        )
 
     conn.commit()
     return updated
@@ -443,6 +506,7 @@ def _update_representations(conn, db_path=None):
 # PASO 5: Olvido (decay)
 # ══════════════════════════════════════════════════════════════
 
+
 def _forget_memories(conn):
     """
     Soft-delete old memories with low confidence.
@@ -450,7 +514,8 @@ def _forget_memories(conn):
     """
     cutoff = (datetime.now() - timedelta(days=FORGET_AFTER_DAYS)).isoformat()
 
-    to_forget = conn.execute("""
+    to_forget = conn.execute(
+        """
         SELECT id FROM memories
         WHERE is_active = 1
         AND confidence < ?
@@ -460,11 +525,16 @@ def _forget_memories(conn):
             SELECT memory_id FROM memory_peers
             WHERE relevance > 0.5
         )
-    """, [FORGET_CONFIDENCE, cutoff]).fetchall()
+    """,
+        [FORGET_CONFIDENCE, cutoff],
+    ).fetchall()
 
     count = len(to_forget)
     for m in to_forget:
-        conn.execute("UPDATE memories SET is_active = 0, updated_at = datetime('now') WHERE id = ?", [m["id"]])
+        conn.execute(
+            "UPDATE memories SET is_active = 0, updated_at = datetime('now') WHERE id = ?",
+            [m["id"]],
+        )
 
     conn.commit()
     return count
@@ -474,19 +544,74 @@ def _forget_memories(conn):
 # CONSOLIDATION LOG
 # ══════════════════════════════════════════════════════════════
 
+
+def _merge_similar_facets(conn, db_path=None):
+    """
+    Merge facets within the same peer that are very similar.
+    Uses similarity > 0.9 threshold.
+    """
+    from .learning import merge_facets
+
+    # For each peer, find facets and check similarities
+    peers = conn.execute("SELECT id FROM peers WHERE is_active = 1").fetchall()
+    merged_count = 0
+
+    for peer in peers:
+        pid = peer["id"]
+        # Get facets for this peer
+        facets = conn.execute(
+            """
+            SELECT pf.id, fe.embedding
+            FROM peer_facets pf
+            JOIN facet_embeddings fe ON pf.id = fe.facet_id
+            WHERE pf.peer_id = ?
+        """,
+            [pid],
+        ).fetchall()
+
+        if len(facets) < 2:
+            continue
+
+        # Compare each pair
+        for i in range(len(facets)):
+            for j in range(i + 1, len(facets)):
+                fid1, emb1 = facets[i]["id"], facets[i]["embedding"]
+                fid2, emb2 = facets[j]["id"], facets[j]["embedding"]
+
+                # Unpack and compare
+                try:
+                    dims = len(embed("test"))  # Get dims
+                    vec1 = list(struct.unpack(f"{dims}f", emb1))
+                    vec2 = list(struct.unpack(f"{dims}f", emb2))
+                    sim = cosine_similarity(vec1, vec2)
+                    if sim > 0.9:
+                        merge_facets(fid1, fid2, db_path)
+                        merged_count += 1
+                        break  # Merged one, continue to next
+                except:
+                    continue
+
+    conn.commit()
+    return merged_count
+
+
 def _start_log(conn, session_id=None):
     """Start a consolidation log entry."""
     notes = f"session={session_id}" if session_id else "auto"
-    conn.execute("""
+    conn.execute(
+        """
         INSERT INTO consolidation_log (started_at, status, notes)
         VALUES (datetime('now'), 'running', ?)
-    """, [notes])
+    """,
+        [notes],
+    )
     return conn.execute("SELECT last_insert_rowid()").fetchone()[0]
 
 
 def _finish_log(conn, log_id, status, stats, notes=None):
     """Finish a consolidation log entry."""
-    conn.execute("""
+    conn.execute(
+        """
         UPDATE consolidation_log
         SET finished_at = datetime('now'),
             status = ?,
@@ -498,14 +623,16 @@ def _finish_log(conn, log_id, status, stats, notes=None):
             errors = ?,
             notes = ?
         WHERE id = ?
-    """, [
-        status,
-        stats["events_processed"],
-        stats["peers_updated"],
-        stats["connections_found"],
-        stats["memories_created"],
-        stats["memories_forgotten"],
-        json.dumps(stats["errors"]),
-        notes,
-        log_id,
-    ])
+    """,
+        [
+            status,
+            stats["events_processed"],
+            stats["peers_updated"],
+            stats["connections_found"],
+            stats["memories_created"],
+            stats["memories_forgotten"],
+            json.dumps(stats["errors"]),
+            notes,
+            log_id,
+        ],
+    )

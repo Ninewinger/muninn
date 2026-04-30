@@ -159,6 +159,7 @@ async def route_text(body: RouteRequest):
         context_hour=body.context_hour,
         instruction_override=body.instruction_override,
         use_reranker=True,
+        strategy=body.strategy,
     )
 
     backend = get_backend()
@@ -169,7 +170,7 @@ async def route_text(body: RouteRequest):
             peer_name=a.get("peer_name", ""),
             peer_type=a.get("peer_type", ""),
             peer_domain=a.get("peer_domain"),
-            facet_id=a["facet_id"],
+            facet_id=a.get("facet_id"),
             facet_type=a["facet_type"],
             similarity=round(a["similarity"], 4),
             bonus_level=round(a.get("bonus_level", 0), 4),
@@ -178,6 +179,7 @@ async def route_text(body: RouteRequest):
             rerank_score=round(a["rerank_score"], 4) if a.get("rerank_score") else None,
             representation=a.get("representation"),
             confidence=a.get("confidence", 0.0),
+            strategy=a.get("strategy", body.strategy),
         )
         for a in activations
     ]

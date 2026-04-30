@@ -198,10 +198,30 @@ class OpenRouterBackend(EmbeddingBackend):
 
 # ── Factory ────────────────────────────────────────────────
 
-def get_backend(model_name: str = None, **kwargs) -> EmbeddingBackend:
-    """Get or create the configured embedding backend."""
+def get_backend(model_name: str = None, db_path: str = None, **kwargs) -> EmbeddingBackend:
+    """Get or create the configured embedding backend.
+    
+    Priority: explicit model_name > EMBEDDING_MODEL env var > DB embedding_config > DEFAULT_MODEL
+    """
     global _backend
-    model = model_name or os.getenv("EMBEDDING_MODEL", DEFAULT_MODEL)
+    model = model_name or os.getenv("EMBEDDING_MODEL")
+    
+    # Fallback: read from DB config if no explicit model
+    if not model:
+        try:
+            conn_temp = get_connection(db_path) if db_path else None
+            if conn_temp:
+                row = conn_temp.execute(
+                    "SELECT value FROM embedding_config WHERE key = 'model_name'"
+                ).fetchone()
+                if row:
+                    model = row["value"]
+                conn_temp.close()
+        except Exception:
+            pass
+    
+    if not model:
+        model = DEFAULT_MODEL
 
     # Return cached if same model
     if _backend is not None and _backend.model_name == model:

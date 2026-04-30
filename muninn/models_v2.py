@@ -79,7 +79,7 @@ class ActivationResponse(BaseModel):
     peer_name: str
     peer_type: str
     peer_domain: Optional[str]
-    facet_id: int
+    facet_id: Optional[int] = None
     facet_type: str
     similarity: float
     bonus_level: float
@@ -88,6 +88,7 @@ class ActivationResponse(BaseModel):
     rerank_score: Optional[float] = None
     representation: Optional[str] = None
     confidence: float
+    strategy: Optional[str] = None
 
 
 # ── Route Request ──────────────────────────────────────────
@@ -97,6 +98,7 @@ class RouteRequest(BaseModel):
     top_k: int = Field(default=3, ge=1, le=10, description="Max activations to return")
     context_hour: Optional[int] = Field(None, ge=0, le=23, description="Hour for context bonuses")
     instruction_override: Optional[str] = None
+    strategy: str = Field(default="hybrid", description="Routing strategy: faceted|composite|hybrid")
 
 
 class RouteResponse(BaseModel):
