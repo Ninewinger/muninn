@@ -366,11 +366,20 @@ def route(
 
             for i, score in enumerate(rerank_scores):
                 activated[i]["rerank_score"] = float(score)
+                # Keep original similarity for threshold comparison
+                activated[i]["similarity_before_rerank"] = activated[i].get("similarity", 0.0)
                 activated[i]["total_score"] = float(score)
 
             activated[:top_n] = sorted(
                 activated[:top_n], key=lambda x: x["total_score"], reverse=True
             )
+
+        # Re-apply individual thresholds AFTER reranker re-scoring
+        # This ensures peers with high rerank scores but below threshold are excluded
+        activated = [
+            act for act in activated
+            if act["total_score"] >= thresholds.get(act["peer_id"], 0.25)
+        ]
 
     # Limit to top_k
     activated = activated[:top_k]
