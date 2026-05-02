@@ -186,7 +186,7 @@ def _process_event(conn, event, db_path=None, dry_run=False):
     event_id = event["id"]
 
     # Route event to find activated peers (via facetas)
-    activated = route(content, db_path=db_path, use_reranker=True)
+    activated = route(content, db_path=db_path, use_reranker=False)
 
     if not activated:
         return {"action": "skipped", "reason": "no peers activated"}
