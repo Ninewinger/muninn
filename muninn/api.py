@@ -30,9 +30,11 @@ from .models_v2 import (
     SessionCreate, SessionResponse,
     ActivationResponse,
     RouteRequest, RouteResponse,
+    DreamRequest, DreamResponse,
     MessageResponse,
 )
 from .router_v2 import route, route_with_context_injection
+from .dreaming import dream as dreaming_process  # noqa: F401
 
 app = FastAPI(
     title="Muninn",
@@ -775,6 +777,38 @@ async def list_events(
         return [row_to_dict(r) for r in rows]
     finally:
         conn.close()
+
+
+# ════════════════════════════════════════════════════════════
+# DREAMING
+# ════════════════════════════════════════════════════════════
+
+
+@app.post("/api/v1/dream", response_model=DreamResponse)
+async def dream(body: DreamRequest):
+    """Run the dreaming/consolidation process.
+
+    Takes unprocessed events, routes them through the semantic router,
+    creates memories, discovers connections, updates representations,
+    and forgets old low-confidence memories.
+    """
+    try:
+        stats = dreaming_process(
+            session_id=body.session_id,
+            dry_run=body.dry_run,
+        )
+        return DreamResponse(
+            events_processed=stats.get("events_processed", 0),
+            memories_created=stats.get("memories_created", 0),
+            memories_skipped=stats.get("memories_skipped", 0),
+            connections_found=stats.get("connections_found", 0),
+            peers_updated=stats.get("peers_updated", 0),
+            memories_forgotten=stats.get("memories_forgotten", 0),
+            facets_merged=stats.get("facets_merged", 0),
+            errors=stats.get("errors", []),
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Dreaming failed: {str(e)}")
 
 
 # ════════════════════════════════════════════════════════════

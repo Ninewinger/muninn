@@ -216,6 +216,25 @@ class SessionResponse(BaseModel):
     metadata: dict
 
 
+# ── Dreaming ────────────────────────────────────────────────
+
+
+class DreamRequest(BaseModel):
+    session_id: Optional[str] = Field(default=None, description="Only consolidate events from this session")
+    dry_run: bool = Field(default=False, description="Simulate without creating memories")
+
+
+class DreamResponse(BaseModel):
+    events_processed: int = 0
+    memories_created: int = 0
+    memories_skipped: int = 0
+    connections_found: int = 0
+    peers_updated: int = 0
+    memories_forgotten: int = 0
+    facets_merged: int = 0
+    errors: list = Field(default_factory=list)
+
+
 # ── Generic ────────────────────────────────────────────────
 
 class MessageResponse(BaseModel):

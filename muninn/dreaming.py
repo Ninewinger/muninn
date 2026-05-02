@@ -150,7 +150,7 @@ def _get_unprocessed_events(conn, session_id=None):
     """
     query = """
         SELECT e.* FROM events e
-        WHERE e.type = 'user_message'
+        WHERE (e.type = 'user_message' OR e.type = 'conversation_turn')
         AND e.id NOT IN (
             SELECT DISTINCT json_extract(m.metadata, '$.event_id')
             FROM memories m
@@ -232,8 +232,8 @@ def _process_event(conn, event, db_path=None, dry_run=False):
         "activated_facets": [
             {
                 "peer_id": a["peer_id"],
-                "facet_id": a["facet_id"],
-                "facet_type": a["facet_type"],
+                "facet_id": a.get("facet_id"),
+                "facet_type": a.get("facet_type"),
             }
             for a in activated
         ],
@@ -303,7 +303,7 @@ def _record_activations(conn, event_id, activated):
             [
                 event_id,
                 a["peer_id"],
-                a["facet_id"],
+                a.get("facet_id"),  # may be None in composite/hybrid
                 a["similarity"],
                 a.get("bonus_level", 0.0),
                 a.get("bonus_context", 0.0),
