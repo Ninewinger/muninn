@@ -1,117 +1,53 @@
 # 🪶 Muninn
 
-> *Memory system for AI agents — inspired by depth psychology.*
+> *Semantic memory system for AI agents — inspired by depth psychology.*
 
-**Local-first · Privacy-first · Zero cloud dependency**
+**Local-first · Privacy-first · Multi-backend embeddings**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-
----
-
-> 🚧 **Muninn está en desarrollo activo.** El diseño arquitectónico está completo (schema, API, semantic router, dreaming) pero la implementación recién comienza. Si te interesa el enfoque, dale ⭐ al repo y vuelve en unas semanas.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
 
 ---
 
 ## What is Muninn?
 
-Muninn is a persistent memory system for AI agents. It gives your agent:
+Muninn is a persistent semantic memory system for AI agents. It gives your agent contextual memory that activates automatically based on meaning, not keywords.
 
-- **Semantic memory** — store and retrieve facts, events, patterns by meaning, not just keywords
-- **Autonomous entities (Peers)** — organize knowledge around topics, people, projects that activate when relevant
-- **Dreaming/Consolidation** — automatic background process that finds patterns, updates representations, detects contradictions
-- **Healthy forgetting** — memory decay with reinforcement, like a real mind
+In Norse mythology, **Huginn** (thought) and **Muninn** (memory) are Odin's two ravens. They fly across the world each day and report what they've seen. Muninn does the same for your AI — it observes, remembers, and surfaces the right context at the right time.
 
-### The idea
+### Core concepts
 
-In Norse mythology, **Huginn** (thought) and **Muninn** (memory) are Odin's two ravens. They fly across the world each day and return to report what they've seen.
+- **Peers** — autonomous knowledge entities (projects, people, topics, concepts). Each peer has multiple *facets* (emotional, physical, social, technical) with their own embeddings.
+- **Semantic routing** — incoming messages are compared against all peer facets. Peers above threshold activate and inject their representation into the agent's context.
+- **Dreaming** — background consolidation that discovers patterns, updates peer representations, finds connections between peers, and decays irrelevant memories.
+- **Hybrid search** — vector similarity (sqlite-vec) + full-text (FTS5) with optional cross-encoder reranking.
 
-Muninn does the same for your AI agent — it observes everything, remembers what matters, and surfaces the right context at the right time.
-
-### The philosophy
-
-Muninn is designed around a principle from Jungian psychology: **the unconscious is not a storage room, it's an active process.**
-
-Memory isn't just about storing and retrieving data. It's about:
-- **What emerges** when the right context appears
-- **What connects** to what (and why)
-- **What fades** when it's no longer relevant
-- **What consolidates** through reflection
-
-This leads to a unique architecture where knowledge is organized into **Peers** — autonomous entities that activate when semantically relevant, maintain their own evolving representation, and connect to each other.
-
----
-
-## Architecture
+### Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────┐
-│                    CONTEXT LAYER                         │
-│  What the agent sees — representations of active Peers   │
+│                  CONTEXT LAYER                            │
+│  Injected into agent when peers activate                  │
 └──────────────────────────┬──────────────────────────────┘
-                           │ only active peers
+                           │ semantic route
 ┌──────────────────────────▼──────────────────────────────┐
-│                     PEER LAYER                           │
-│  Autonomous entities with:                               │
-│    - Activation embedding (semantic territory)           │
-│    - Living representation (evolving summary)            │
-│    - Linked memories (raw data)                          │
+│                   ROUTER LAYER                            │
+│  Strategy A/B (faceted) · Strategy C (composite)        │
+│  Strategy hybrid · Optional reranker                     │
 └──────────────────────────┬──────────────────────────────┘
                            │
 ┌──────────────────────────▼──────────────────────────────┐
-│                   STORAGE LAYER                          │
+│                    PEER LAYER                             │
+│  Peers with facets, representations, embeddings          │
+│  Activation thresholds · Level bonuses · Context bonuses │
+└──────────────────────────┬──────────────────────────────┘
+                           │
+┌──────────────────────────▼──────────────────────────────┐
+│                  STORAGE LAYER                            │
 │  SQLite + sqlite-vec + FTS5                              │
-│  Hybrid search: vector similarity + full-text            │
+│  Vector search · Full-text · Embedding config            │
 └─────────────────────────────────────────────────────────┘
 ```
-
-### How Peers work
-
-A Peer is an entity that represents a topic, person, project, or concept. It has:
-
-1. **Activation embedding** — a vector defining its "semantic territory"
-2. **Representation** — a pre-built text summary, updated during dreaming
-3. **Connections** — typed, weighted links to other peers
-4. **Linked memories** — individual facts, events, patterns
-
-When a new event comes in, Muninn's **semantic router** compares it against all peers' embeddings. If similarity exceeds the peer's threshold, it activates — injecting its representation into the agent's context.
-
-```
-User: "I felt weird today, not sure why"
-        │
-        ▼
-Semantic Router evaluates all peers:
-  Peer "Anxiety":     0.78 ✅ ACTIVATED
-  Peer "Relationships": 0.45 (dormant)
-  Peer "Gym":         0.10 (dormant)
-        │
-        ▼
-Inject into agent context:
-  "[Peer: Anxiety | confidence 0.6]
-   User's anxiety manifests especially with AI topics..."
-```
-
-### Healthy forgetting
-
-Muninn doesn't keep everything forever. It uses a **decay + reinforcement** system:
-
-- All memories have a `confidence` score that decays over time
-- When a memory is accessed or reinforced, confidence goes up
-- During dreaming, the LLM evaluates which memories to compress, archive, or reinforce
-- Nothing is truly deleted — archived memories can be reactivated if relevant again
-- **Versioning with decay** — when a fact is updated, the old version isn't overwritten. It enters the decay system. If a peer finds a pattern in the old value ("weight went up too fast = injury risk"), it gets reinforced. If nobody touches it, it fades to archive.
-
-### Dreaming (Consolidation)
-
-A background process that runs periodically:
-
-1. Reviews new memories since last consolidation
-2. Detects patterns across memories of the same peer
-3. Updates the peer's representation with new insights
-4. Discovers new connections between peers
-5. Cleans obsolete memories
-6. Adjusts activation thresholds based on real usage
-
-Uses a lightweight LLM (any OpenAI-compatible API) for reasoning.
 
 ---
 
@@ -119,16 +55,19 @@ Uses a lightweight LLM (any OpenAI-compatible API) for reasoning.
 
 | Feature | Description |
 |---------|-------------|
-| 🧠 **Semantic activation** | Peers activate based on meaning, not keywords |
+| 🧠 **Semantic activation** | Peers activate based on meaning via facet embeddings |
 | 🔗 **Typed connections** | Peers link to each other with weighted, described relationships |
-| 💭 **Living representations** | Each peer has an evolving summary, not just raw data |
+| 💭 **Living representations** | Each peer has an evolving summary (updated during dreaming) |
 | 🔄 **Memory lifecycle** | ADD / UPDATE / DELETE / NOOP — adaptive, no duplicates |
-| 🌙 **Dreaming** | Background consolidation with LLM reasoning |
-| 📉 **Healthy forgetting** | Decay + reinforcement + archive |
-| 🔍 **Hybrid search** | Vector similarity + full-text (FTS5) |
-| 🏠 **100% local** | Single SQLite file, no cloud, no external DB |
-| 🌍 **Multilingual** | Supports Spanish, English, and any language via multilingual embeddings |
-| 🪶 **Lightweight** | Runs on 8GB RAM, CPU-only, no GPU needed |
+| 🌙 **Dreaming** | Background consolidation (embeddings + rules, no LLM needed) |
+| 📉 **Healthy forgetting** | Decay + confidence thresholds → archive |
+| 🔍 **3 search strategies** | Faceted (fast), Composite (rich), Hybrid (best of both) |
+| 🔎 **Reranking** | Optional cross-encoder (local BGE) or OpenRouter Cohere Rerank |
+| 🏠 **100% local** | Single SQLite file, no external databases |
+| 🌍 **Multilingual** | Spanish, English, and any language via multilingual embeddings |
+| 🪶 **Multiple embedding backends** | OpenRouter, Gemini, Qwen3, sentence-transformers |
+| 📁 **Obsidian Vault sync** | Index notes directly from an Obsidian vault |
+| 🧩 **Hermes plugin** | Built-in plugin for Hermes Agent with prefetch() |
 
 ---
 
@@ -137,38 +76,83 @@ Uses a lightweight LLM (any OpenAI-compatible API) for reasoning.
 ### Prerequisites
 
 - Python 3.10+
-- [sqlite-vec](https://github.com/asg017/sqlite-vec) extension
+- [sqlite-vec](https://github.com/asg017/sqlite-vec) extension loaded in your Python environment
 
 ### Install
 
 ```bash
 git clone https://github.com/Ninewinger/muninn.git
 cd muninn
+python -m venv venv
+source venv/bin/activate
 pip install -r requirements.txt
+```
+
+### Configure
+
+Copy the template and fill in your API keys:
+
+```bash
+cp config/env.template .env
+# Edit .env with your settings
+```
+
+Minimal `.env` for OpenRouter embeddings (recommended):
+
+```env
+# Embedding backend (OpenRouter recommended)
+EMBEDDING_PROVIDER=openrouter
+EMBEDDING_MODEL=openai/text-embedding-3-small
+EMBEDDING_DIMENSIONS=1536
+
+# OpenRouter API key
+OPENROUTER_API_KEY=sk-or-v1-***
+
+# Database
+DB_PATH=./muninn.db
 ```
 
 ### Run
 
 ```bash
-uvicorn muninn.api:app --host 0.0.0.0 --port 8000
+uvicorn muninn.api:app --host 0.0.0.0 --port 8199
 ```
 
-### Use
+---
+
+## API Usage
+
+### Create a Peer
 
 ```bash
-# Create a peer
-curl -X POST http://localhost:8000/api/v1/peers \
+curl -X POST http://localhost:8199/api/v1/peers \
   -H "Content-Type: application/json" \
   -d '{
     "id": "project_alpha",
     "name": "Project Alpha",
     "type": "proyecto",
-    "description": "Main project - game development with emotional mechanics",
+    "domain": "Game Development",
+    "description": "Main project - game with emotional mechanics",
     "tags": ["game", "development", "indie"]
   }'
+```
 
-# Store a memory
-curl -X POST http://localhost:8000/api/v1/memories \
+### Add a Facet to a Peer
+
+```bash
+curl -X POST http://localhost:8199/api/v1/peers/project_alpha/facets \
+  -H "Content-Type: application/json" \
+  -d '{
+    "facet_type": "tecnico",
+    "text": "Game design patterns, combat mechanics, emotional variables",
+    "weight": 1.0
+  }'
+```
+
+### Store a Memory
+
+```bash
+curl -X POST http://localhost:8199/api/v1/memories \
   -H "Content-Type: application/json" \
   -d '{
     "content": "Decided to use Determination and Intuition as core emotional variables",
@@ -176,19 +160,26 @@ curl -X POST http://localhost:8000/api/v1/memories \
     "source": "conversation",
     "peer_ids": ["project_alpha"]
   }'
+```
 
-# Send an event (triggers semantic router)
-curl -X POST http://localhost:8000/api/v1/events \
+### Route a message (semantic activation)
+
+```bash
+curl -X POST http://localhost:8199/api/v1/route \
   -H "Content-Type: application/json" \
   -d '{
-    "session_id": "session_001",
-    "type": "user_message",
-    "content": "Im thinking about changing the combat system",
-    "channel": "cli"
+    "text": "I feel like the combat system needs more emotional weight",
+    "top_k": 3,
+    "strategy": "hybrid"
   }'
+```
 
-# Search
-curl -X POST http://localhost:8000/api/v1/search \
+Response includes activated peers with their representations, similarity scores, and context bonuses. This is what gets injected into the agent's context.
+
+### Search memories
+
+```bash
+curl -X POST http://localhost:8199/api/v1/search \
   -H "Content-Type: application/json" \
   -d '{
     "query": "emotional variables in combat",
@@ -196,138 +187,230 @@ curl -X POST http://localhost:8000/api/v1/search \
   }'
 ```
 
+### Run Dreaming (Consolidation)
+
+```bash
+curl -X POST http://localhost:8199/api/v1/dream \
+  -H "Content-Type: application/json" \
+  -d '{"peer_ids": ["project_alpha"], "strategy": "composite"}'
+```
+
+### Event stream
+
+Send an event (auto-routed to relevant peers):
+
+```bash
+curl -X POST http://localhost:8199/api/v1/events \
+  -H "Content-Type: application/json" \
+  -d '{
+    "session_id": "session_001",
+    "type": "user_message",
+    "content": "I think the combat system needs more emotional weight",
+    "channel": "cli"
+  }'
+```
+
 ---
 
 ## Database Schema
 
-Muninn uses SQLite with three extensions:
-- **sqlite-vec** — vector similarity search
-- **FTS5** — full-text search
-- **Standard SQLite** — relational data
+Muninn uses SQLite with `sqlite-vec` (vector search) and FTS5 (full-text search).
 
 Core tables:
-- `peers` — autonomous entities with embeddings and representations
-- `memories` — individual facts, events, patterns (with lifecycle)
+- `peers` — autonomous entities with domain, type, activation settings
+- `peer_facets` — 3-5 facets per peer, each with its own embedding (emotional, physical, social, technical, contextual)
+- `facet_embeddings` — vec0 virtual table for facet similarity search
+- `memories` — individual facts, events, patterns linked to peers
+- `memory_embeddings` — vec0 virtual table for memory search
+- `memory_fts` — FTS5 index for full-text search
 - `connections` — typed, weighted relationships between peers
 - `events` — input stream (what the agent observes)
-- `activations` — audit log of peer activations
+- `activations` — audit log of peer activations with scores
 - `sessions` — conversation tracking
+- `embedding_config` — model name, dimensions, instruction
+- `consolidation_log` — dreaming audit trail
 
-See [schema.sql](muninn/schema.sql) for full details.
+Full schema: [muninn/schema_v2.sql](muninn/schema_v2.sql)
 
 ---
 
 ## Configuration
 
-Create a `.env` file (or set environment variables):
+See [config/env.template](config/env.template) for all options.
 
-```env
-# Embedding model (local)
-EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2
-EMBEDDING_DIMENSIONS=384
+Key environment variables:
 
-# Or use a local GGUF model via llama.cpp
-# EMBEDDING_MODEL_PATH=./models/nomic-embed-text-v1.5.Q8_0.gguf
-
-# LLM for dreaming/consolidation (any OpenAI-compatible API)
-LLM_API_URL=https://api.z.ai/api/paas/v4/chat/completions
-LLM_MODEL=glm-4.7-flash
-LLM_API_KEY=your-key-here
-
-# Server
-HOST=0.0.0.0
-PORT=8000
-
-# Database
-DB_PATH=./muninn.db
-
-# Memory decay
-DECAY_RATE=0.95        # multiplier per day
-MIN_CONFIDENCE=0.1     # below this → archive
-REINFORCE_BOOST=0.1    # boost when accessed
-```
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `EMBEDDING_PROVIDER` | `openrouter` | Backend: `openrouter`, `gemini`, `sentence-transformers`, `qwen` |
+| `EMBEDDING_MODEL` | `openai/text-embedding-3-small` | Model name for the selected backend |
+| `EMBEDDING_DIMENSIONS` | `1536` | Vector dimensions (must match model) |
+| `DB_PATH` | `./muninn.db` | Path to SQLite database file |
+| `HOST` | `0.0.0.0` | Server bind address |
+| `PORT` | `8199` | Server port |
+| `LLM_API_URL` | — | For dreaming with LLM (optional, dreaming works without it) |
+| `DECAY_RATE` | `0.95` | Memory confidence multiplier per day |
+| `MIN_CONFIDENCE` | `0.1` | Below this → archived |
+| `REINFORCE_BOOST` | `0.1` | Confidence boost when accessed |
 
 ---
 
-## Roadmap
+## Embedding Backends
 
-### MVP (v0.1) — Current
-- [x] Architecture design
-- [x] Database schema (SQLite + sqlite-vec + FTS5)
-- [x] API endpoints specification
-- [ ] FastAPI implementation
-- [ ] Semantic router with cosine similarity
-- [ ] Basic peer CRUD + activation
-- [ ] 5-10 seed peers from existing data
-- [ ] Python client library
+Muninn supports multiple embedding backends configured via `.env`:
 
-### v0.2 — Intelligence
-- [ ] Memory lifecycle (ADD/UPDATE/DELETE/NOOP)
-- [ ] Automatic event stream ingestion
-- [ ] Dreaming/consolidation with LLM
-- [ ] Automatic peer creation from patterns
-- [ ] Connection discovery
+| Backend | Provider | Config | Dimensions |
+|---------|----------|--------|------------|
+| **OpenRouter** | `openrouter` | `EMBEDDING_MODEL=openai/text-embedding-3-small` | 1536 |
+| **Gemini** | `gemini` | `EMBEDDING_MODEL=text-embedding-004` | 768 |
+| **Qwen3** | `qwen` | `EMBEDDING_MODEL=Qwen/Qwen3-Embedding-8B` | 1024 |
+| **Sentence-Transformers** | `sentence-transformers` | `EMBEDDING_MODEL=paraphrase-multilingual-MiniLM-L12-v2` | 384 |
 
-### v0.3 — Connections
-- [ ] Peer-to-peer activation chains
-- [ ] Dynamic representations (LLM-generated during dreaming)
-- [ ] Connection graph visualization
-- [ ] Sync between multiple machines
+OpenRouter is recommended for production. Gemini is a good free alternative.
 
-### v0.4 — Integration
-- [ ] MCP server protocol
-- [ ] LangChain/LlamaIndex integration
-- [ ] nanobot skill package
-- [ ] Obsidian vault sync (peers = note folders)
+---
+
+## Hermes Agent Integration
+
+Muninn has a native plugin for [Hermes Agent](https://github.com/NousResearch/hermes) that:
+1. **Prefetches context** — calls Muninn's route endpoint before each turn, injects activated peer representations into the agent's context
+2. **Logs sessions** — sends session_end events to Muninn for dreaming
+3. **Exposes tools** — `muninn_search`, `muninn_add_memory`, `muninn_list_peers`
+
+### Installation
+
+The plugin lives in `~/.hermes/plugins/muninn/`. Point Hermes to it in config:
+
+```yaml
+# config.yaml
+plugins:
+  - path: ~/.hermes/plugins/muninn
+```
+
+### Architecture
+
+```
+┌──────────────┐     HTTP      ┌──────────────┐
+│  Hermes      │ ──────────►   │  Muninn       │
+│  Agent       │    route()    │  FastAPI      │
+│              │ ◄──────────   │  Server       │
+│  Plugin      │  peer context │  :8199        │
+│  muninn/     │               │               │
+└──────────────┘               └──────────────┘
+```
+
+### How it works
+
+1. **`prefetch()` hook** — before each user message, Hermes calls `GET /api/v1/route?text=<user_message>`. Activated peers with scores > threshold are injected as contextual preamble.
+
+2. **`on_session_end` hook** — when a session ends, events are sent to Muninn for dreaming consolidation.
+
+3. **Custom tools** — three tools registered automatically:
+   - `muninn_search(query, top_k=5)` — semantic search across all memories
+   - `muninn_add_memory(content, tags, peer_id, memory_type)` — store a memory
+   - `muninn_list_peers()` — list all peers and their descriptions
+
+### Example plugin.yaml
+
+```yaml
+name: muninn
+version: 0.1.0
+description: "Muninn — memory system with semantic routing and dreaming"
+hooks:
+  - on_session_end
+  - on_pre_compress
+```
+
+> **Note:** The plugin currently uses `on_session_end` and `on_pre_compress` hooks. Prefetch integration (automatic context injection before each turn) is planned but requires Hermes to support the `prefetch` hook natively. As a workaround, the agent can manually call `muninn_search()` and Muninn's route endpoint.
+
+---
+
+## Semantic Router Strategies
+
+| Strategy | Description | Speed | Quality |
+|----------|-------------|-------|---------|
+| **faceted** (A/B) | Compare query against each facet embedding individually | Fastest | Good |
+| **composite** (C) | Build rich composite text per peer, embed once, compare | Medium | Better |
+| **hybrid** | Blend faceted + composite scores for best of both | Medium | Best |
+
+The router also supports:
+- **Context bonuses** — boosts scores based on time of day, recency, and frequency
+- **Reranking** — optional cross-encoder reranking via OpenRouter Cohere Rerank v3.5 or local BGE-reranker-v2-m3
+- **Activation thresholds** — per-peer configurable minimum similarity scores
+
+---
+
+## Dreaming (Consolidation)
+
+Dreaming is Muninn's background consolidation process. It runs periodically and:
+
+1. Reviews events since last consolidation
+2. Classifies events by relevance to each peer (via facet embeddings)
+3. Creates new memories linked to peers
+4. Updates peer representations with new insights
+5. Discovers connections between peers that co-activate
+6. Applies memory decay (confidence → thresholds → archive)
+7. Detects patterns across related memories
+
+Dreaming works **without an LLM** — it uses embeddings + rules, making it fast and cheap. An optional LLM can be configured for richer pattern detection.
+
+---
+
+## Project Status
+
+Muninn is actively developed. Current state (v0.2 — "Disco Elysium" architecture):
+
+- ✅ FastAPI server with full CRUD for peers, facets, memories, events, sessions, connections
+- ✅ Semantic router with 3 strategies (faceted, composite, hybrid)
+- ✅ Multi-backend embeddings (OpenRouter, Gemini, Qwen3, sentence-transformers)
+- ✅ Dreaming/consolidation (embeddings + rules)
+- ✅ Hermes Agent plugin with tools and session hooks
+- ✅ Reranking (OpenRouter API + local cross-encoder)
+- ✅ Context bonus system (time, frequency, recency)
+- ✅ Obsidian Vault indexer (sync notes to Muninn memories)
+- ✅ Feedback loop integration
+- ✅ Memory lifecycle (ADD/UPDATE/DELETE/NOOP with decay)
+
+### Roadmap
+
+- **v0.3** — Peer-to-peer activation chains, connection graph visualization
+- **v0.4** — MCP server protocol, multi-machine sync
+- **v0.5** — LangChain/LlamaIndex integration
 
 ---
 
 ## Why "Muninn"?
 
-In Norse mythology, Huginn (Old Norse for "thought") and Muninn ("memory" or "mind") are a pair of ravens that fly all over the world, Midgard, and bring information to the god Odin.
+> *Huginn ok Muninn flúga hverjan dag*
+> *Jörmungrund yfir;*
+> *óumk ek of Hugin, at hann aftr né komiț,*
+> *þó sjástumk meirr um Muninn.*
 
-> *Huginn ok Muninn flúga hverjan dag<br>
-> Jörmungrund yfir;<br>
-> óumk ek of Hugin, at hann aftr né komiț,<br>
-> þó sjástumk meirr um Muninn.*
-
-> *Hugin and Munin fly each day<br>
-> over the spacious earth;<br>
-> I fear for Hugin, that he come not back,<br>
-> yet more anxious am I for Munin.*
+> *Hugin and Munin fly each day*
+> *over the spacious earth;*
+> *I fear for Hugin, that he come not back,*
+> *yet more anxious am I for Munin.*
 
 — Grímnismál, stanza 20
 
-Huginn is the active agent — thinking, reasoning, responding. **Muninn is the memory system** — observing, remembering, surfacing context. The agent fears losing its memory more than losing its thoughts.
+Huginn (thought) is the active agent — thinking, reasoning, responding. **Muninn is the memory system** — observing, remembering, surfacing context. The agent fears losing its memory more than losing its thoughts.
 
----
-
-## Contributing
-
-Contributions are welcome! This project started as a personal tool and grew into something others might find useful.
-
-1. Fork the repo
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+The architecture is inspired by Jungian psychology: **the unconscious is not a storage room, it's an active process.** Memory isn't about storing and retrieving data — it's about what *emerges* when the right context appears.
 
 ---
 
 ## License
 
-This project is licensed under the MIT License — see [LICENSE](LICENSE) for details.
+MIT — see [LICENSE](LICENSE) for details.
 
 ---
 
 ## Support
 
-If Muninn is useful to you, consider supporting its development:
+If Muninn is useful to you:
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ninewinger)
 
-Or visit: https://ko-fi.com/ninewinger
-
 ---
 
-*Built with 🪶 by [Diego Vergara](https://github.com/Ninewinger) and [nanobot](https://github.com/HKUDS/nanobot) 🐈*
+*Built with 🪶 by [Diego Vergara](https://github.com/Ninewinger)*
