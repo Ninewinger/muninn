@@ -60,6 +60,7 @@ In Norse mythology, **Huginn** (thought) and **Muninn** (memory) are Odin's two 
 | 💭 **Living representations** | Each peer has an evolving summary (updated during dreaming) |
 | 🔄 **Memory lifecycle** | ADD / UPDATE / DELETE / NOOP — adaptive, no duplicates |
 | 🌙 **Dreaming** | Background consolidation (embeddings + rules, no LLM needed) |
+| 🤖 **Dreaming LLM** | Optional fact extraction + curiosity generation with resilient fallback |
 | 📉 **Healthy forgetting** | Decay + confidence thresholds → archive |
 | 🔍 **3 search strategies** | Faceted (fast), Composite (rich), Hybrid (best of both) |
 | 🔎 **Reranking** | Optional cross-encoder (local BGE) or OpenRouter Cohere Rerank |
@@ -248,7 +249,11 @@ Key environment variables:
 | `DB_PATH` | `./muninn.db` | Path to SQLite database file |
 | `HOST` | `0.0.0.0` | Server bind address |
 | `PORT` | `8199` | Server port |
-| `LLM_API_URL` | — | For dreaming with LLM (optional, dreaming works without it) |
+| `LLM_API_URL` | `https://open.bigmodel.cn/api/coding/paas/v4/chat/completions` | Primary LLM API (Zhipu) |
+| `LLM_MODEL` | `glm-5.1` | Primary LLM model |
+| `LLM_FALLBACK_URL` | `https://integrate.api.nvidia.com/v1/chat/completions` | Fallback LLM API (NVIDIA NIM) |
+| `LLM_FALLBACK_MODEL` | `z-ai/glm-5.1` | Fallback LLM model |
+| `LLM_EXTRACTION_ENABLED` | `true` | Enable/disable LLM fact extraction + curiosity |
 | `DECAY_RATE` | `0.95` | Memory confidence multiplier per day |
 | `MIN_CONFIDENCE` | `0.1` | Below this → archived |
 | `REINFORCE_BOOST` | `0.1` | Confidence boost when accessed |
@@ -352,7 +357,17 @@ Dreaming is Muninn's background consolidation process. It runs periodically and:
 6. Applies memory decay (confidence → thresholds → archive)
 7. Detects patterns across related memories
 
-Dreaming works **without an LLM** — it uses embeddings + rules, making it fast and cheap. An optional LLM can be configured for richer pattern detection.
+Dreaming works **without an LLM** — it uses embeddings + rules, making it fast and cheap. An **optional LLM extension** (`dreaming_llm.py`) adds two capabilities:
+
+- **Fact extraction** — analyzes user messages to extract durable facts (preferences, data, insights, patterns)
+- **Curiosity generation** — identifies peers with few memories and generates questions to fill knowledge gaps
+
+The LLM module is **resilient by design**: it has a primary provider (Zhipu GLM 5.1) and an automatic fallback (NVIDIA NIM). If both fail, dreaming continues normally without interruption. Configure via `LLM_EXTRACTION_ENABLED` (default: `true`).
+
+```bash
+# Trigger dreaming with LLM enabled
+curl -X POST http://localhost:8199/api/v1/dream
+```
 
 ---
 
@@ -364,6 +379,7 @@ Muninn is actively developed. Current state (v0.2 — "Disco Elysium" architectu
 - ✅ Semantic router with 3 strategies (faceted, composite, hybrid)
 - ✅ Multi-backend embeddings (OpenRouter, Gemini, Qwen3, sentence-transformers)
 - ✅ Dreaming/consolidation (embeddings + rules)
+- ✅ Dreaming LLM extension — optional fact extraction + curiosity generation via LLM
 - ✅ Hermes Agent plugin with tools and session hooks
 - ✅ Reranking (OpenRouter API + local cross-encoder)
 - ✅ Context bonus system (time, frequency, recency)

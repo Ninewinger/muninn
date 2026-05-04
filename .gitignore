@@ -59,3 +59,15 @@ obsidian_index_cache/
 
 # Session notes (personal)
 SESION_*.md
+
+# Runtime state
+obsidian_index_state.json
+*.broken.patch
+
+# Debug scripts (development tools, not part of the project)
+check_*.py
+debug_*.py
+test_*.py
+fill_missing_*.py
+index_offline*.py
+migrate_*.py

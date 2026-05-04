@@ -12,6 +12,7 @@ Inspiración: Honcho Dreaming + KAIROS autoDream + Jung (función onírica)
 """
 
 import json
+import logging
 import os
 import struct
 import sqlite3
@@ -21,7 +22,10 @@ from typing import Optional
 from .db import get_connection, get_embedding_dims
 from .embeddings_v2 import embed, embed_batch
 from .router_v2 import route
+from . import dreaming_llm  # LLM-based fact extraction + curiosity (optional)
 
+
+logger = logging.getLogger(__name__)
 
 # ══════════════════════════════════════════════════════════════
 # CONFIGURACIÓN
@@ -43,6 +47,13 @@ COACTIVATION_THRESHOLD = 3
 
 # Actualización de representación: cada N activaciones
 REPRESENTATION_UPDATE_INTERVAL = 10
+
+# ══════════════════════════════════════════════════════════════
+# LLM: Extraer hechos durables (opcional — solo si hay LLM)
+# ══════════════════════════════════════════════════════════════
+LLM_EXTRACTION_ENABLED = os.environ.get(
+    "LLM_EXTRACTION_ENABLED", "true"
+).lower() in ("true", "1", "yes")
 
 # ══════════════════════════════════════════════════════════════
 # CONTENT FILTERING — Prevent garbage from becoming memories
@@ -159,6 +170,99 @@ def dream(
             except Exception as e:
                 stats["errors"].append(f"Event {event['id']}: {str(e)}")
 
+        # ── PASO 2.5: Extraer hechos con LLM (opcional) ──────────
+        if not dry_run and LLM_EXTRACTION_ENABLED and dreaming_llm._is_configured():
+            memories_created_llm = 0
+            for event in events:
+                if event["type"] != "user_message":
+                    continue
+                # Get what peers were activated for this event
+                activated = conn.execute(
+                    """
+                    SELECT DISTINCT peer_id FROM activations WHERE event_id = ?
+                    """,
+                    [event["id"]],
+                ).fetchall()
+                activated_peers = [a["peer_id"] for a in activated]
+
+                if not activated_peers:
+                    continue
+
+                try:
+                    fact = dreaming_llm.extract_facts_from_event(
+                        event["content"], activated_peers
+                    )
+                    if fact.get("has_fact") and fact.get("fact_text"):
+                        confidence = fact.get("confidence", 0.6)
+                        if confidence >= dreaming_llm.MIN_CONFIDENCE_FOR_MEMORY:
+                            fact_text = fact["fact_text"]
+                            relevant_peer = fact.get("relevant_peer", "")
+                            fact_type = fact.get("fact_type", "hecho")
+
+                            # Guardar memoria
+                            conn.execute(
+                                """
+                                INSERT INTO memories
+                                (content, type, source, confidence, session_id, source_channel)
+                                VALUES (?, ?, 'dreaming_llm', ?, ?, 'dreaming')
+                                """,
+                                [
+                                    fact_text,
+                                    fact_type,
+                                    min(confidence, 0.95),
+                                    event.get("session_id"),
+                                ],
+                            )
+                            memory_id = conn.lastrowid
+
+                            # Vincular al peer más relevante
+                            if relevant_peer:
+                                conn.execute(
+                                    """
+                                    INSERT OR REPLACE INTO memory_peers
+                                    (memory_id, peer_id, relevance)
+                                    VALUES (?, ?, ?)
+                                    """,
+                                    [memory_id, relevant_peer, confidence],
+                                )
+
+                            # Vincular a otros peers activados con menor peso
+                            for peer_id in activated_peers[:3]:
+                                if peer_id != relevant_peer:
+                                    conn.execute(
+                                        """
+                                        INSERT OR IGNORE INTO memory_peers
+                                        (memory_id, peer_id, relevance)
+                                        VALUES (?, ?, ?)
+                                        """,
+                                        [memory_id, peer_id, confidence * 0.5],
+                                    )
+
+                            # Generar embedding
+                            dims = get_embedding_dims(conn)
+                            vector = embed(fact_text)
+                            if vector and len(vector) == dims:
+                                vec_bytes = struct.pack(f"{len(vector)}f", *vector)
+                                conn.execute(
+                                    "INSERT INTO memory_embeddings (memory_id, embedding) VALUES (?, ?)",
+                                    [memory_id, vec_bytes],
+                                )
+                            else:
+                                logger.warning(
+                                    f"Embedding dim mismatch for fact: "
+                                    f"expected {dims}, got {len(vector) if vector else 0}"
+                                )
+
+                            memories_created_llm += 1
+                except Exception as e:
+                    stats["errors"].append(
+                        f"LLM extraction failed for event {event['id']}: {str(e)}"
+                    )
+
+            if memories_created_llm > 0:
+                stats["memories_created_llm"] = memories_created_llm
+                logger.info(f"LLM extraction: {memories_created_llm} new memories")
+
         # ── PASO 3: Descubrir conexiones por co-activación ────
         if not dry_run:
             new_connections = _discover_connections(conn)
@@ -174,10 +278,32 @@ def dream(
             merged = _merge_similar_facets(conn, db_path)
             stats["facets_merged"] = merged
 
-        # ── PASO 5: Olvido (decay) ────────────────────────────
+# ── PASO 5.5: Olvido (decay) ────────────────────────────
         if not dry_run:
             forgotten = _forget_memories(conn)
             stats["memories_forgotten"] = forgotten
+
+        # ── PASO 6: Generar preguntas de curiosidad (opcional) ──
+        if not dry_run and LLM_EXTRACTION_ENABLED and dreaming_llm._is_configured():
+            curiosity_file = None
+            vault_path = os.environ.get("OBSIDIAN_VAULT", "")
+            if vault_path:
+                curiosity_file = os.path.join(
+                    vault_path, "01_sistema/asistente/cola-curiosidad.md"
+                )
+            try:
+                questions = dreaming_llm.generate_curiosity_questions(
+                    conn,
+                    db_path=db_path,
+                    max_questions=3,
+                    curiosity_file=curiosity_file,
+                )
+                if questions:
+                    stats["curiosity_questions"] = len(questions)
+                    logger.info(f"Generated {len(questions)} curiosity questions")
+            except Exception as e:
+                stats["errors"].append(f"Curiosity generation failed: {str(e)}")
+                logger.warning(f"Curiosity generation failed: {e}")
 
         _finish_log(conn, log_id, "completed", stats)
         conn.commit()
