@@ -405,6 +405,14 @@ If Muninn is useful to you:
 
 [![Ko-fi](https://img.shields.io/badge/Ko--fi-Support_me-FF5E5B?logo=ko-fi&logoColor=white)](https://ko-fi.com/ninewinger)
 
+### Crypto
+
+| Network | Address |
+|---------|---------|
+| **BSC (BEP-20)** | `0xada590a9a119d413adb2f7d20bcb93a1123ef0b6` |
+| **Solana (SPL)** | `Ht6FszVeEijo4qmccZKUq68i86DFTZC1A3LWo7tmmric` |
+| **Bitcoin (BTC)** | `15hTorFSC4i2Z1kWKU78tzrHMWw7gjfqWa` |
+
 ---
 
 *Built with 🪶 by [Diego Vergara](https://github.com/Ninewinger)*
