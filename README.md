@@ -371,12 +371,6 @@ Muninn is actively developed. Current state (v0.2 — "Disco Elysium" architectu
 - ✅ Feedback loop integration
 - ✅ Memory lifecycle (ADD/UPDATE/DELETE/NOOP with decay)
 
-### Roadmap
-
-- **v0.3** — Peer-to-peer activation chains, connection graph visualization
-- **v0.4** — MCP server protocol, multi-machine sync
-- **v0.5** — LangChain/LlamaIndex integration
-
 ---
 
 ## Why "Muninn"?
