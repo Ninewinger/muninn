@@ -8,7 +8,6 @@ __pycache__/
 dist/
 build/
 eggs/
-*.whl
 
 # Virtual environments
 venv/
@@ -19,11 +18,13 @@ env/
 .env
 .env.local
 
-# Database
+# Database - exclude all runtime DBs (keep only schema.sql)
 *.db
 *.db-journal
 *.db-wal
 *.db-shm
+*.bak.*
+*.bak
 
 # Models (downloaded separately)
 models/
@@ -49,5 +50,12 @@ logs/
 .coverage
 htmlcov/
 
-# Muninn data (keep schema, ignore runtime data)
+# Muninn runtime data
 data/
+obsidian_index_cache/
+
+# Ruff cache
+.ruff_cache/
+
+# Session notes (personal)
+SESION_*.md

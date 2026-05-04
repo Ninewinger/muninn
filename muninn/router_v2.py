@@ -1,12 +1,11 @@
-"""Semantic router v0.3 — Strategy C: composite + faceted hybrid.
+"""Semantic router v0.4 - Gemini embedding + OpenRouter reranker.
 
 Architecture:
   - Strategy A/B (faceted): compare query against individual facet embeddings
   - Strategy C (composite): build rich text per peer dynamically, embed once, compare
   - Strategy hybrid: blend faceted + composite scores for best of both worlds
-  - Optional: bge-reranker-v2-m3 cross-encoder refines ranking
+  - Reranker: OpenRouter Cohere Rerank v3.5 (32K context, multilingual)
 """
-
 import os
 import sqlite3
 import struct
@@ -16,9 +15,8 @@ from datetime import datetime
 
 from .embeddings_v2 import embed, embed_batch, cosine_similarity, get_backend
 from .db import get_connection
-
-# Reranker singleton
-_reranker = None
+from .context_bonus import compute_context_bonus, record_activation
+from .reranker_openrouter import rerank as openrouter_rerank
 
 # Composite embedding cache: {(db_path_hash, peer_id): (embedding, content_hash)}
 _composite_cache: Dict[Tuple[str, str], Tuple[List[float], str]] = {}
@@ -230,14 +228,8 @@ def _route_composite(
 
 
 def _compute_context_bonus(peer_id: str, context_hour: int | None) -> float:
-    """Compute context-based bonus (time of day, etc.)."""
-    bonus = 0.0
-    if context_hour is not None:
-        if peer_id == "sombra_angel_atardecer" and 17 <= context_hour <= 23:
-            bonus += 0.05
-        if peer_id == "casual_social" and (context_hour < 9 or context_hour > 21):
-            bonus += 0.03
-    return bonus
+    """Compute context-based bonus — delegates to enhanced context_bonus module."""
+    return compute_context_bonus(peer_id, context_hour)
 
 
 def route(
@@ -356,29 +348,40 @@ def route(
     # Sort by total_score desc
     activated.sort(key=lambda x: x["total_score"], reverse=True)
 
-    # Rerank with cross-encoder if available and enough candidates
+    # Rerank with OpenRouter Cohere reranker (32K context, multilingual)
     if use_reranker and len(activated) > 1:
-        reranker = get_reranker()
-        if reranker is not None:
+        try:
             top_n = min(15, len(activated))
-            pairs = [(text, act.get("facet_text", "")) for act in activated[:top_n]]
-            rerank_scores = reranker.predict(pairs)
-
-            for i, score in enumerate(rerank_scores):
-                activated[i]["rerank_score"] = float(score)
-                # Keep original similarity for threshold comparison
-                activated[i]["similarity_before_rerank"] = activated[i].get("similarity", 0.0)
-                activated[i]["total_score"] = float(score)
-
-            activated[:top_n] = sorted(
-                activated[:top_n], key=lambda x: x["total_score"], reverse=True
-            )
+            rerank_docs = []
+            for act in activated[:top_n]:
+                peer = peer_data.get(act["peer_id"], {})
+                repr_text = peer.get("representation", "")
+                facet_text = act.get("facet_text", "")
+                doc_text = (facet_text + " " + repr_text).strip()
+                if not doc_text:
+                    doc_text = act.get("peer_name", "") + " (" + act.get("peer_domain", "") + ")"
+                rerank_docs.append({"peer_id": act["peer_id"], "text": doc_text})
+            
+            reranked = openrouter_rerank(text, rerank_docs, top_k=top_n)
+            
+            if reranked:
+                reranked_map = {r["peer_id"]: r for r in reranked}
+                for act in activated[:top_n]:
+                    r = reranked_map.get(act["peer_id"])
+                    if r and "rerank_score" in r:
+                        act["rerank_score"] = r["rerank_score"]
+                        act["similarity_before_rerank"] = act.get("similarity", 0.0)
+                        act["total_score"] = r["rerank_score"]
+                        act["rerank_model"] = r.get("rerank_model", "cohere/rerank-v3.5")
+                
+                activated[:top_n] = sorted(activated[:top_n], key=lambda x: x.get("rerank_score", 0), reverse=True)
+        except Exception as e:
+            print("  [Router] Reranker error: " + str(e))
 
         # Re-apply individual thresholds AFTER reranker re-scoring
-        # This ensures peers with high rerank scores but below threshold are excluded
         activated = [
             act for act in activated
-            if act["total_score"] >= thresholds.get(act["peer_id"], 0.25)
+            if act.get("total_score", 0) >= thresholds.get(act["peer_id"], 0.25)
         ]
 
     # Limit to top_k

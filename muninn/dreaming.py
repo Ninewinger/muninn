@@ -29,18 +29,74 @@ from .router_v2 import route
 
 # Relevancia mínima para crear memoria permanente
 MEMORY_THRESHOLD_HIGH = 0.50  # alta → memoria permanente
-MEMORY_THRESHOLD_LOW = 0.35  # media → memoria temporal (baja confianza)
+MEMORY_THRESHOLD_LOW = 0.50  # media → memoria temporal (baja confianza)
+# ↑ Was 0.35 — too low, created garbage from every casual message.
+# Now requires genuine semantic match before creating a memory.
 MEMORY_THRESHOLD_FORGET = 0.25  # bajo → no crear memoria
 
 # Decay: memorias con confianza < esto después de N días se olvidan
-FORGET_CONFIDENCE = 0.2
-FORGET_AFTER_DAYS = 30
+FORGET_CONFIDENCE = 0.3  # ↑ Was 0.2 — more aggressive pruning of weak memories
+FORGET_AFTER_DAYS = 14  # ↓ Was 30 — forget garbage faster
 
 # Co-activación: si 2 peers se activan juntos > N veces, sugerir conexión
 COACTIVATION_THRESHOLD = 3
 
 # Actualización de representación: cada N activaciones
 REPRESENTATION_UPDATE_INTERVAL = 10
+
+# ══════════════════════════════════════════════════════════════
+# CONTENT FILTERING — Prevent garbage from becoming memories
+# ══════════════════════════════════════════════════════════════
+
+# Patterns that indicate non-memory-worthy content
+_GARBAGE_PATTERNS = [
+    "Review the conversation above",
+    "consider whether a skill should be saved",
+    "consider saving to memory",
+    "consider two things",
+    "Has the user revealed",
+    "[Note:",
+    "[Replying to:",
+    "Cronjob Response:",
+    "Reasoning:",
+    "Work in this order",
+    "do not skip",
+    "model was just switched",
+]
+
+# Minimum content length to be considered (short messages are rarely valuable)
+_MIN_CONTENT_LENGTH = 20
+
+
+def _is_garbage(content: str) -> tuple[bool, str]:
+    """Check if content is not memory-worthy.
+    
+    Returns (is_garbage: bool, reason: str).
+    """
+    if not content or not content.strip():
+        return True, "empty content"
+    
+    stripped = content.strip()
+    
+    if len(stripped) < _MIN_CONTENT_LENGTH:
+        return True, f"too short ({len(stripped)} chars < {_MIN_CONTENT_LENGTH})"
+    
+    # Check for model instruction leakage
+    lower = stripped.lower()
+    for pattern in _GARBAGE_PATTERNS:
+        if pattern.lower() in lower:
+            return True, f"matches garbage pattern: '{pattern[:40]}'"
+    
+    # Check for very generic / conversational filler
+    generic = [
+        "si", "no", "ok", "vale", "hola", "que tal", "que pasó",
+        "excelente", "muy bien", "claro", "entendido", "perfecto",
+        "test", "testing", "user msg test",
+    ]
+    if stripped.lower().rstrip("?.,!") in generic:
+        return True, "generic filler"
+    
+    return False, ""
 
 
 # ══════════════════════════════════════════════════════════════
@@ -95,8 +151,9 @@ def dream(
         for event in events:
             try:
                 result = _process_event(conn, event, db_path, dry_run)
-                if result["action"] == "memory_created":
-                    stats["memories_created"] += 1
+                if result["action"] == "activations_recorded":
+                    stats["memories_created"] += 0  # No memories created, just activations
+                    stats["memories_skipped"] += 0
                 elif result["action"] == "skipped":
                     stats["memories_skipped"] += 1
             except Exception as e:
@@ -178,12 +235,25 @@ def _process_event(conn, event, db_path=None, dry_run=False):
     """
     Process a single event:
     - Route through semantic router (facetas) to find activated peers
-    - Classify relevance (high/medium/low)
-    - Create memory if relevant
-    - Record activations (with facet info)
+    - Record activations (for routing improvement)
+    - DO NOT create memories — memories are created via explicit API calls only.
+
+    Rationale: Without an LLM to extract facts from conversation turns,
+    the dreaming was storing raw conversation fragments as "memories",
+    which degraded Muninn's quality. Now the dreaming focuses on its
+    core function: learning which peers relate to which topics (activations)
+    and discovering connections between peers.
+
+    Memories are curated by Hermes (via muninn_add_memory tool) which
+    uses a capable model to decide what's worth remembering.
     """
     content = event["content"]
     event_id = event["id"]
+
+    # ── CONTENT FILTER: Skip garbage before routing ──
+    is_garbage, garbage_reason = _is_garbage(content)
+    if is_garbage:
+        return {"action": "skipped", "reason": f"garbage filter: {garbage_reason}"}
 
     # Route event to find activated peers (via facetas)
     activated = route(content, db_path=db_path, use_reranker=False)
@@ -191,103 +261,14 @@ def _process_event(conn, event, db_path=None, dry_run=False):
     if not activated:
         return {"action": "skipped", "reason": "no peers activated"}
 
-    # Get the best activation (highest total_score)
-    best = activated[0]
-    best_score = best["total_score"]
-
-    # Classify relevance
-    if best_score >= MEMORY_THRESHOLD_HIGH:
-        memory_type = "episodio"
-        confidence = min(0.9, best_score)
-        relevance = "high"
-    elif best_score >= MEMORY_THRESHOLD_LOW:
-        memory_type = "episodio"
-        confidence = 0.3
-        relevance = "medium"
-    elif best_score >= MEMORY_THRESHOLD_FORGET:
-        # Record activation but don't create memory
+    # Record activations — this improves routing over time
+    if not dry_run:
         _record_activations(conn, event_id, activated)
-        return {"action": "skipped", "reason": f"low relevance ({best_score:.3f})"}
-    else:
-        return {"action": "skipped", "reason": "below threshold"}
-
-    if dry_run:
-        return {
-            "action": "would_create_memory",
-            "relevance": relevance,
-            "peers": [a["peer_id"] for a in activated],
-            "best_score": best_score,
-        }
-
-    # Record activations
-    _record_activations(conn, event_id, activated)
-
-    # Create memory
-    peer_ids = [a["peer_id"] for a in activated]
-    metadata = {
-        "event_id": event_id,
-        "relevance": relevance,
-        "best_score": round(best_score, 4),
-        "activated_peers": peer_ids,
-        "activated_facets": [
-            {
-                "peer_id": a["peer_id"],
-                "facet_id": a.get("facet_id"),
-                "facet_type": a.get("facet_type"),
-            }
-            for a in activated
-        ],
-        "session_id": event["session_id"],
-    }
-
-    conn.execute(
-        """
-        INSERT INTO memories (content, type, source, confidence, occurred_at, session_id, source_channel, metadata)
-        VALUES (?, ?, 'dreaming', ?, ?, ?, ?, ?)
-    """,
-        [
-            content,
-            memory_type,
-            confidence,
-            event["created_at"],
-            event["session_id"],
-            event["channel"],
-            json.dumps(metadata),
-        ],
-    )
-
-    memory_id = conn.execute("SELECT last_insert_rowid()").fetchone()[0]
-
-    # Embed the memory
-    _store_memory_embedding(conn, memory_id, content)
-
-    # Index in FTS
-    conn.execute(
-        """
-        INSERT INTO memory_fts (rowid, content, type, source)
-        VALUES (?, ?, ?, ?)
-    """,
-        [memory_id, content, memory_type, "dreaming"],
-    )
-
-    # Link memory to activated peers
-    for a in activated:
-        conn.execute(
-            """
-            INSERT OR IGNORE INTO memory_peers (memory_id, peer_id, relevance)
-            VALUES (?, ?, ?)
-        """,
-            [memory_id, a["peer_id"], a["similarity"]],
-        )
-
-    conn.commit()
 
     return {
-        "action": "memory_created",
-        "memory_id": memory_id,
-        "relevance": relevance,
-        "peers": peer_ids,
-        "best_score": best_score,
+        "action": "activations_recorded",
+        "peers": [a["peer_id"] for a in activated],
+        "best_score": activated[0]["total_score"],
     }
 
 
@@ -422,13 +403,15 @@ def _update_representations(conn, db_path=None):
 
     updated = []
     for peer in peers:
-        # Get top memories for this peer
+        # Get top memories for this peer (only high-quality sources)
         memories = conn.execute(
             """
-            SELECT m.content, mp.relevance
+            SELECT m.content, mp.relevance, m.source
             FROM memories m
             JOIN memory_peers mp ON m.id = mp.memory_id
             WHERE mp.peer_id = ? AND m.is_active = 1
+            AND m.confidence >= 0.5
+            AND m.source NOT IN ('dreaming')
             ORDER BY mp.relevance DESC
             LIMIT 20
         """,
@@ -443,26 +426,28 @@ def _update_representations(conn, db_path=None):
         memory_factor = min(1.0, len(memories) / 50.0)
         new_confidence = min(0.95, avg_relevance * memory_factor + 0.1)
 
-        # Build updated representation from top memories
-        top_3 = memories[:3]
-        memory_summaries = [f"- {m['content'][:80]}" for m in top_3]
+        # Keep representation CLEAN — only the original semantic description.
+        # Memory contamination was causing garbage to leak into the representation,
+        # which then got embedded and degraded routing quality.
+        # Memories are queried separately via memory_peers; they don't need to
+        # be in the representation.
+        clean_representation = peer['representation'] or peer['description']
+        # Strip any previously appended "Memorias clave" sections
+        if 'Memorias clave' in clean_representation:
+            clean_representation = clean_representation.split('\n\nMemorias clave')[0].strip()
 
-        new_representation = (
-            f"{peer['representation'] or peer['description']}\n\n"
-            f"Memorias clave ({len(memories)} total):\n" + "\n".join(memory_summaries)
-        )
-
-        # Update peer
+        # Update peer confidence only (not representation)
         conn.execute(
             """
             UPDATE peers
-            SET confidence = ?, representation = ?, updated_at = datetime('now')
+            SET confidence = ?, updated_at = datetime('now')
             WHERE id = ?
         """,
-            [round(new_confidence, 3), new_representation, peer["id"]],
+            [round(new_confidence, 3), peer["id"]],
         )
 
-        # Re-embed ALL facets for this peer with enriched representation
+        # Re-embed ALL facets for this peer using ORIGINAL facet text only.
+        # No memory context injection — it contaminates facet embeddings.
         facets = conn.execute(
             """
             SELECT id, text FROM peer_facets WHERE peer_id = ?
@@ -470,15 +455,9 @@ def _update_representations(conn, db_path=None):
             [peer["id"]],
         ).fetchall()
 
-        # Optionally enrich facet text with memory context
         for facet in facets:
-            enriched_text = facet["text"]
-            if top_3:
-                # Append top memory context to facet embedding text
-                context_snippets = " ".join(m["content"][:50] for m in top_3[:2])
-                enriched_text = f"{facet['text']} Contexto: {context_snippets}"
-
-            vector = embed(enriched_text)
+            # Use only the facet's own text — clean and pure
+            vector = embed(facet["text"])
             vec_bytes = struct.pack(f"{len(vector)}f", *vector)
             conn.execute(
                 "DELETE FROM facet_embeddings WHERE facet_id = ?", [facet["id"]]

@@ -11,9 +11,22 @@ import os
 from typing import List, Optional
 from abc import ABC, abstractmethod
 
-# Default model configuration
-DEFAULT_MODEL = "Qwen/Qwen3-Embedding-8B"
-DEFAULT_DIMENSIONS = 1024
+# Load .env for API keys
+def _load_env():
+    env_path = "/root/.hermes/.env"
+    if os.path.exists(env_path):
+        with open(env_path) as f:
+            for line in f:
+                if "=" in line and not line.startswith("#"):
+                    key, val = line.strip().split("=", 1)
+                    if key not in os.environ:
+                        os.environ[key] = val
+
+_load_env()
+
+# Default model configuration - OpenRouter only (no local models)
+DEFAULT_MODEL = "openai/text-embedding-3-small"
+DEFAULT_DIMENSIONS = 1536
 DEFAULT_INSTRUCTION = "Dado un mensaje de un usuario, identifica que dominio de su vida esta activando"
 
 # Singleton model cache
@@ -227,27 +240,23 @@ def get_backend(model_name: str = None, db_path: str = None, **kwargs) -> Embedd
     if _backend is not None and _backend.model_name == model:
         return _backend
 
-    if "qwen3" in model.lower() or "Qwen3" in model:
-        dims = kwargs.get("dimensions", DEFAULT_DIMENSIONS)
-        _backend = Qwen3Backend(model, dimensions=dims)
-    elif "openrouter" in model.lower() or model.startswith("openai/"):
-        _backend = OpenRouterBackend(model)
-    else:
-        # Default: sentence-transformers
-        _backend = SentenceTransformerBackend(model)
+    # Siempre usar OpenRouter - no modelos locales
+    _backend = OpenRouterBackend(model)
 
     return _backend
 
 
 def embed(text: str, is_query: bool = False, instruction: str = None) -> List[float]:
     """Generate embedding for a single text using configured backend."""
-    backend = get_backend()
+    db_path = os.getenv("DB_PATH")
+    backend = get_backend(db_path=db_path)
     return backend.embed(text, is_query, instruction)
 
 
 def embed_batch(texts: List[str], is_query: bool = False, instruction: str = None) -> List[List[float]]:
     """Generate embeddings for multiple texts using configured backend."""
-    backend = get_backend()
+    db_path = os.getenv("DB_PATH")
+    backend = get_backend(db_path=db_path)
     return backend.embed_batch(texts, is_query, instruction)
 
 

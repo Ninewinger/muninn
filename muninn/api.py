@@ -35,6 +35,8 @@ from .models_v2 import (
 )
 from .router_v2 import route, route_with_context_injection
 from .dreaming import dream as dreaming_process  # noqa: F401
+from .feedback_loop import add_feedback_endpoints
+from .obsidian_indexer import index_note, index_vault, get_index_stats, search_vault
 
 app = FastAPI(
     title="Muninn",
@@ -475,6 +477,22 @@ async def create_memory(body: MemoryCreate):
                     INSERT OR IGNORE INTO memory_peers (memory_id, peer_id, relevance)
                     VALUES (?, ?, 0.5)
                 """, [memory_id, peer_id])
+
+        # Auto-add as facet to 'memoria_durable' peer for CLI memories (router visibility)
+        # This ensures new memories are searchable via the router
+        if body.source == 'cli' or not body.peer_ids:
+            peer_check = conn.execute("SELECT id FROM peers WHERE id = 'memoria_durable' AND is_active = 1").fetchone()
+            if peer_check:
+                fac_id = conn.execute("""
+                    INSERT INTO peer_facets (peer_id, facet_type, text, weight)
+                    VALUES ('memoria_durable', 'memory_content', ?, 0.8)
+                """, [body.content[:500]]).lastrowid
+                store_facet_embedding(conn, fac_id, body.content[:500])
+                # Link memory to peer
+                conn.execute("""
+                    INSERT OR IGNORE INTO memory_peers (memory_id, peer_id, relevance)
+                    VALUES (?, 'memoria_durable', 0.5)
+                """, [memory_id])
 
         conn.commit()
 
@@ -962,3 +980,31 @@ async def delete_connection(connection_id: int):
         return MessageResponse(message=f"Connection {connection_id} deleted")
     finally:
         conn.close()
+
+add_feedback_endpoints(app)
+
+# OBSIDIAN INDEXER
+@app.post("/api/v1/obsidian/index", status_code=201)
+async def obsidian_index(body: dict):
+    force = body.get("force", False)
+    limit = body.get("limit", None)
+    result = index_vault(force=force, limit=limit)
+    return {"status": "ok", "results": result}
+
+@app.post("/api/v1/obsidian/index_note", status_code=201)
+async def obsidian_index_note(body: dict):
+    filepath = body.get("filepath", "")
+    force = body.get("force", False)
+    result = index_note(filepath, force=force)
+    return {"status": "ok", "result": result}
+
+@app.get("/api/v1/obsidian/stats")
+async def obsidian_stats():
+    return get_index_stats()
+
+@app.post("/api/v1/obsidian/search")
+async def obsidian_search(body: dict):
+    query = body.get("query", "")
+    top_k = body.get("top_k", 5)
+    results = search_vault(query, top_k=top_k)
+    return {"query": query, "results": results}
